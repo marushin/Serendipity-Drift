@@ -1,0 +1,456 @@
+/* Google Chrome Official Website Design - Injected Content Widget */
+
+.serendipity-drift-container {
+  margin: 14px 0 24px 0;
+  padding: 16px 20px;
+  max-width: 720px;
+  background: #ffffff;
+  border: 1px solid #dfe1e5;
+  border-radius: 24px;
+  color: #1f1f1f;
+  font-family: "Google Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 20;
+  box-sizing: border-box;
+}
+
+.serendipity-drift-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.serendipity-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.serendipity-chrome-icon {
+  flex-shrink: 0;
+}
+
+.serendipity-heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f1f1f;
+  letter-spacing: -0.2px;
+}
+
+.serendipity-badge {
+  background: #e8f0fe;
+  color: #0b57d0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.2px;
+}
+
+.serendipity-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.serendipity-btn {
+  background: #f1f3f4;
+  border: 1px solid #dadce0;
+  color: #1f1f1f;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 6px 14px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.serendipity-btn:hover {
+  background: #e8eaed;
+  border-color: #c7c7c7;
+}
+
+.serendipity-btn-primary {
+  background: #0b57d0;
+  border-color: #0b57d0;
+  color: #ffffff;
+}
+
+.serendipity-btn-primary:hover {
+  background: #0842a0;
+  border-color: #0842a0;
+  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.3);
+}
+
+.serendipity-vector-tag {
+  background: #f8fafd;
+  border: 1px solid #e0e3e7;
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #444746;
+}
+
+.serendipity-vector-icon {
+  font-size: 15px;
+}
+
+.serendipity-vector-name {
+  color: #0b57d0;
+  font-weight: 700;
+}
+
+.serendipity-vector-prompt {
+  color: #5f6368;
+}
+
+.serendipity-chips-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+/* Base Stage Chip */
+.serendipity-stage-chip {
+  border-radius: 18px;
+  padding: 14px 14px 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+}
+
+.serendipity-stage-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(60, 64, 67, 0.16);
+}
+
+/* Chrome 4 Colors for Chips */
+.chip-step-1 {
+  background: #f0f6ff;
+  border-color: #d3e3fd;
+}
+.chip-step-1 .serendipity-stage-rank { color: #0b57d0; }
+.chip-step-1 .serendipity-chip-query { color: #0b57d0; }
+
+.chip-step-2 {
+  background: #fefcf3;
+  border-color: #feefc3;
+}
+.chip-step-2 .serendipity-stage-rank { color: #b06000; }
+.chip-step-2 .serendipity-chip-query { color: #8c4c00; }
+
+.chip-step-3 {
+  background: #f2f9f4;
+  border-color: #ceead6;
+}
+.chip-step-3 .serendipity-stage-rank { color: #137333; }
+.chip-step-3 .serendipity-chip-query { color: #137333; }
+
+.chip-step-4 {
+  background: #fef6f6;
+  border-color: #fad2cf;
+}
+.chip-step-4 .serendipity-stage-rank { color: #c5221f; }
+.chip-step-4 .serendipity-chip-query { color: #c5221f; }
+
+.serendipity-chip-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.serendipity-stage-rank {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.serendipity-chip-query {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.serendipity-chip-exp {
+  font-size: 12px;
+  color: #444746;
+  line-height: 1.45;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.serendipity-chip-link {
+  font-size: 11px;
+  color: #0b57d0;
+  text-decoration: underline;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+/* Spinner */
+.serendipity-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d3e3fd;
+  border-radius: 50%;
+  border-top-color: #0b57d0;
+  animation: serendipity-spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes serendipity-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Google Home Page Injected Button */
+.serendipity-google-btn {
+  margin-left: 10px !important;
+  background: #f8fafd !important;
+  color: #0b57d0 !important;
+  border: 1px solid #d3e3fd !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  font-family: inherit !important;
+  height: 36px !important;
+  padding: 0 16px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.serendipity-google-btn:hover {
+  background: #e8f0fe !important;
+  border-color: #0b57d0 !important;
+  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.2) !important;
+}
+
+/* ==========================================================================
+   Dark Theme Support (System prefers-color-scheme or Google Search Dark Mode)
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  .serendipity-drift-container {
+    background: #202124;
+    border-color: #3c4043;
+    color: #e8eaed;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .serendipity-drift-header {
+    border-bottom-color: #303134;
+  }
+
+  .serendipity-heading {
+    color: #e8eaed;
+  }
+
+  .serendipity-badge {
+    background: #172b4d;
+    color: #8ab4f8;
+  }
+
+  .serendipity-btn {
+    background: #303134;
+    border-color: #5f6368;
+    color: #e8eaed;
+  }
+
+  .serendipity-btn:hover {
+    background: #3c4043;
+    border-color: #747775;
+  }
+
+  .serendipity-btn-primary {
+    background: #8ab4f8;
+    border-color: #8ab4f8;
+    color: #202124;
+  }
+
+  .serendipity-btn-primary:hover {
+    background: #aecbfa;
+    border-color: #aecbfa;
+    box-shadow: 0 1px 4px rgba(138, 180, 248, 0.3);
+  }
+
+  .serendipity-vector-tag {
+    background: #2d2e31;
+    border-color: #3c4043;
+    color: #bdc1c6;
+  }
+
+  .serendipity-vector-name {
+    color: #8ab4f8;
+  }
+
+  .serendipity-vector-prompt {
+    color: #9aa0a6;
+  }
+
+  /* Dark mode 4-color chips */
+  .chip-step-1 {
+    background: #142233;
+    border-color: #1e3c60;
+  }
+  .chip-step-1 .serendipity-stage-rank { color: #8ab4f8; }
+  .chip-step-1 .serendipity-chip-query { color: #d2e3fc; }
+  .chip-step-1 .serendipity-chip-link { color: #8ab4f8; }
+
+  .chip-step-2 {
+    background: #2b1f0c;
+    border-color: #593c12;
+  }
+  .chip-step-2 .serendipity-stage-rank { color: #fdd663; }
+  .chip-step-2 .serendipity-chip-query { color: #feefc3; }
+  .chip-step-2 .serendipity-chip-link { color: #fdd663; }
+
+  .chip-step-3 {
+    background: #102416;
+    border-color: #1d4d2b;
+  }
+  .chip-step-3 .serendipity-stage-rank { color: #81c995; }
+  .chip-step-3 .serendipity-chip-query { color: #ceead6; }
+  .chip-step-3 .serendipity-chip-link { color: #81c995; }
+
+  .chip-step-4 {
+    background: #2b1313;
+    border-color: #5c2020;
+  }
+  .chip-step-4 .serendipity-stage-rank { color: #f28b82; }
+  .chip-step-4 .serendipity-chip-query { color: #fad2cf; }
+  .chip-step-4 .serendipity-chip-link { color: #f28b82; }
+
+  .serendipity-chip-exp {
+    color: #9aa0a6;
+  }
+
+  .serendipity-google-btn {
+    background: #303134 !important;
+    color: #8ab4f8 !important;
+    border-color: #5f6368 !important;
+  }
+
+  .serendipity-google-btn:hover {
+    background: #3c4043 !important;
+    border-color: #8ab4f8 !important;
+    box-shadow: 0 1px 4px rgba(138, 180, 248, 0.25) !important;
+  }
+}
+
+/* 구글 자체 사이트 다크모드 강제 적용 시 (.serendipity-dark 클래스) */
+.serendipity-dark.serendipity-drift-container {
+  background: #202124;
+  border-color: #3c4043;
+  color: #e8eaed;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.serendipity-dark .serendipity-drift-header {
+  border-bottom-color: #303134;
+}
+
+.serendipity-dark .serendipity-heading {
+  color: #e8eaed;
+}
+
+.serendipity-dark .serendipity-badge {
+  background: #172b4d;
+  color: #8ab4f8;
+}
+
+.serendipity-dark .serendipity-btn {
+  background: #303134;
+  border-color: #5f6368;
+  color: #e8eaed;
+}
+
+.serendipity-dark .serendipity-btn:hover {
+  background: #3c4043;
+  border-color: #747775;
+}
+
+.serendipity-dark .serendipity-btn-primary {
+  background: #8ab4f8;
+  border-color: #8ab4f8;
+  color: #202124;
+}
+
+.serendipity-dark .serendipity-btn-primary:hover {
+  background: #aecbfa;
+  border-color: #aecbfa;
+  box-shadow: 0 1px 4px rgba(138, 180, 248, 0.3);
+}
+
+.serendipity-dark .serendipity-vector-tag {
+  background: #2d2e31;
+  border-color: #3c4043;
+  color: #bdc1c6;
+}
+
+.serendipity-dark .serendipity-vector-name {
+  color: #8ab4f8;
+}
+
+.serendipity-dark .serendipity-vector-prompt {
+  color: #9aa0a6;
+}
+
+.serendipity-dark .chip-step-1 {
+  background: #142233;
+  border-color: #1e3c60;
+}
+.serendipity-dark .chip-step-1 .serendipity-stage-rank { color: #8ab4f8; }
+.serendipity-dark .chip-step-1 .serendipity-chip-query { color: #d2e3fc; }
+.serendipity-dark .chip-step-1 .serendipity-chip-link { color: #8ab4f8; }
+
+.serendipity-dark .chip-step-2 {
+  background: #2b1f0c;
+  border-color: #593c12;
+}
+.serendipity-dark .chip-step-2 .serendipity-stage-rank { color: #fdd663; }
+.serendipity-dark .chip-step-2 .serendipity-chip-query { color: #feefc3; }
+.serendipity-dark .chip-step-2 .serendipity-chip-link { color: #fdd663; }
+
+.serendipity-dark .chip-step-3 {
+  background: #102416;
+  border-color: #1d4d2b;
+}
+.serendipity-dark .chip-step-3 .serendipity-stage-rank { color: #81c995; }
+.serendipity-dark .chip-step-3 .serendipity-chip-query { color: #ceead6; }
+.serendipity-dark .chip-step-3 .serendipity-chip-link { color: #81c995; }
+
+.serendipity-dark .chip-step-4 {
+  background: #2b1313;
+  border-color: #5c2020;
+}
+.serendipity-dark .chip-step-4 .serendipity-stage-rank { color: #f28b82; }
+.serendipity-dark .chip-step-4 .serendipity-chip-query { color: #fad2cf; }
+.serendipity-dark .chip-step-4 .serendipity-chip-link { color: #f28b82; }
+
+.serendipity-dark .serendipity-chip-exp {
+  color: #9aa0a6;
+}

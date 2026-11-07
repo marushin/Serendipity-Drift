@@ -1,0 +1,920 @@
+/* Google Chrome Official Website Design System */
+
+:root {
+  --font-family: "Google Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  /* Google Neutral Palette (Light) */
+  --bg-page: #f8fafd;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
+  --bg-dock: #ffffff;
+  --bg-dock-btn: #f8f9fa;
+  --bg-pill: #f1f3f4;
+  --text-primary: #1f1f1f;
+  --text-secondary: #444746;
+  --text-muted: #5f6368;
+  --border-subtle: #e0e3e7;
+  --border-default: #dadce0;
+  
+  /* Google Chrome Brand 4 Colors */
+  --chrome-blue: #0b57d0;
+  --chrome-blue-hover: #0842a0;
+  --chrome-blue-tray: #d3e3fd;
+  
+  --chrome-yellow: #f9ab00;
+  --chrome-yellow-tray: #feefc3;
+  
+  --chrome-green: #a8dab5;
+  --chrome-green-tray: #ceead6;
+  --chrome-green-dark: #137333;
+  
+  --chrome-red: #f28b82;
+  --chrome-red-tray: #fad2cf;
+  --chrome-red-dark: #c5221f;
+
+  /* Geometry */
+  --radius-card: 28px;
+  --radius-dock: 16px;
+  --radius-pill: 24px;
+  --radius-sm: 8px;
+}
+
+/* 브라우저 테마(다크 모드)에 따른 자동 색상 전환 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #1a1a1c;
+    --bg-surface: #252629;
+    --bg-surface-elevated: #2d2e31;
+    --bg-dock: #202124;
+    --bg-dock-btn: #2d2e31;
+    --bg-pill: #2d2e31;
+    --text-primary: #e8eaed;
+    --text-secondary: #bdc1c6;
+    --text-muted: #9aa0a6;
+    --border-subtle: #3c4043;
+    --border-default: #5f6368;
+    
+    /* Google Chrome Brand 4 Colors (Dark Tuned) */
+    --chrome-blue: #174ea6;
+    --chrome-blue-hover: #1967d2;
+    --chrome-blue-tray: #0f1f33;
+    
+    --chrome-yellow: #a35d00;
+    --chrome-yellow-tray: #2d1c07;
+    
+    --chrome-green: #137333;
+    --chrome-green-tray: #0f2416;
+    --chrome-green-dark: #81c995;
+    
+    --chrome-red: #c5221f;
+    --chrome-red-tray: #2d0f0f;
+    --chrome-red-dark: #f28b82;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.5;
+  font-size: 13px;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 16px;
+  gap: 16px;
+}
+
+/* ==========================================================================
+   Header (Google Chrome Style)
+   ========================================================================== */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chrome-logo {
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.logo-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Status Pill (Google Material 3 Chip) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f1f3f4;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #747775;
+}
+
+.status-ready {
+  background: #e6f4ea;
+  border-color: #a8dab5;
+  color: #137333;
+}
+.status-ready .status-dot {
+  background-color: #1e8e3e;
+  box-shadow: 0 0 4px #1e8e3e;
+}
+
+.status-downloading {
+  background: #fef7e0;
+  border-color: #fdd663;
+  color: #b06000;
+}
+.status-downloading .status-dot {
+  background-color: #f9ab00;
+}
+
+.status-fallback {
+  background: #e8f0fe;
+  border-color: #aecbfa;
+  color: #1a73e8;
+}
+.status-fallback .status-dot {
+  background-color: #1a73e8;
+}
+
+/* ==========================================================================
+   History Trail (Material Breadcrumbs)
+   ========================================================================== */
+.history-trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+}
+
+.trail-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.trail-items {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trail-node {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--chrome-blue);
+  cursor: pointer;
+  background: #e8f0fe;
+  padding: 3px 8px;
+  border-radius: 12px;
+  transition: all 0.15s ease;
+}
+
+.trail-node:hover {
+  background: #d2e3fc;
+  text-decoration: underline;
+}
+
+.trail-arrow {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+/* ==========================================================================
+   Control Panel (Google Search Bar Style)
+   ========================================================================== */
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-surface);
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.1);
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px 2px 14px;
+  transition: all 0.2s ease;
+}
+
+.search-input-wrapper:focus-within {
+  background: #ffffff;
+  border-color: var(--chrome-blue);
+  box-shadow: 0 1px 6px rgba(11, 87, 208, 0.2);
+}
+
+.search-icon {
+  flex-shrink: 0;
+}
+
+.query-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  height: 40px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: background 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: #e8eaed;
+}
+
+.vector-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vector-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.select-wrapper {
+  flex: 1;
+}
+
+.vector-select {
+  width: 100%;
+  background: #f8f9fa;
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: 7px 12px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.vector-select:focus {
+  border-color: var(--chrome-blue);
+  background: #ffffff;
+}
+
+.action-row {
+  display: flex;
+}
+
+.btn {
+  width: 100%;
+  height: 42px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--chrome-blue);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.3);
+}
+
+.btn-primary:hover {
+  background: var(--chrome-blue-hover);
+  box-shadow: 0 2px 6px rgba(11, 87, 208, 0.4);
+}
+
+.btn-primary:disabled {
+  background: #dadce0;
+  color: #80868b;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Active Vector Banner */
+.active-vector-banner {
+  background: #e8f0fe;
+  border-left: 4px solid var(--chrome-blue);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 10px 14px;
+}
+
+.vector-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--chrome-blue);
+  margin-bottom: 2px;
+}
+
+.vector-prompt {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Action Legend Bar (상단 기능 가이드) */
+.dock-legend-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.06);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+}
+
+.legend-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.legend-dot {
+  color: var(--border-default);
+  font-size: 10px;
+}
+
+/* ==========================================================================
+   Loading & Empty States
+   ========================================================================== */
+.loading-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+/* Chrome 4-Color Spinner */
+.chrome-spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3.5px solid transparent;
+  border-top-color: #1a73e8;
+  border-right-color: #ea4335;
+  border-bottom-color: #fbbc04;
+  border-left-color: #34a853;
+  animation: chrome-spin 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes chrome-spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 13px;
+  color: var(--chrome-blue);
+  font-weight: 500;
+}
+
+.empty-icon-wrapper {
+  margin-bottom: 4px;
+}
+
+.empty-state h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.empty-tips {
+  margin-top: 6px;
+  background: #e8eaed;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.tip-badge {
+  background: var(--chrome-blue);
+  color: #fff;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  margin-right: 4px;
+}
+
+/* ==========================================================================
+   Chrome Official Website Step Cards (크롬 공식 사이트 카드 이식)
+   ========================================================================== */
+.card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drift-card {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+}
+
+.drift-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Hero Section (Top colored compartment) */
+.card-hero {
+  padding: 16px 18px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-step-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.card-step-badge {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.card-scope-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.2px;
+  display: inline-block;
+  line-height: 1.3;
+}
+
+.card-headline {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+  word-break: keep-all;
+}
+
+.card-desc {
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin-bottom: 2px;
+  word-break: keep-all;
+}
+
+/* Card Tray Section (Bottom contrasting compartment - Direct Button Placement) */
+.card-tray {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-actions.icon-only-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0;
+  width: 100%;
+}
+
+.icon-only-actions .btn-dock {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  color: var(--text-primary);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.icon-only-actions .btn-dock .dock-icon {
+  font-size: 17px;
+  line-height: 1;
+  display: inline-block;
+}
+
+.icon-only-actions .btn-dock:hover {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+}
+
+.icon-only-actions .btn-dock:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.icon-only-actions .btn-dock-primary {
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.icon-only-actions .btn-dock-primary:hover {
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
+}
+
+.btn-dock {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border-default);
+  background: var(--bg-dock-btn);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.btn-dock:hover {
+  background: #f1f3f4;
+  border-color: #c7c7c7;
+}
+
+.dock-icon {
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   4단계별 크롬 고유 색상 테마 정의
+   ========================================================================== */
+
+/* 1단계: Chrome Royal Blue (크롬 파랑) */
+.step-1 .card-hero {
+  background: var(--chrome-blue);
+  color: #ffffff;
+}
+.step-1 .card-step-badge {
+  color: rgba(255, 255, 255, 0.85);
+}
+.step-1 .card-scope-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.step-1 .card-headline {
+  color: #ffffff;
+}
+.step-1 .card-desc {
+  color: rgba(255, 255, 255, 0.95);
+}
+.step-1 .card-tray {
+  background: var(--chrome-blue-tray);
+}
+.step-1 .btn-dock-primary {
+  background: var(--chrome-blue);
+  color: #ffffff;
+  border-color: var(--chrome-blue);
+}
+.step-1 .btn-dock-primary:hover {
+  background: var(--chrome-blue-hover);
+}
+
+/* 2단계: Chrome Sunny Yellow (크롬 노랑) */
+.step-2 .card-hero {
+  background: var(--chrome-yellow);
+  color: #1f1f1f;
+}
+.step-2 .card-step-badge {
+  color: rgba(31, 31, 31, 0.75);
+}
+.step-2 .card-scope-badge {
+  background: rgba(31, 31, 31, 0.08);
+  color: #1f1f1f;
+  border: 1px solid rgba(31, 31, 31, 0.16);
+}
+.step-2 .card-headline {
+  color: #1f1f1f;
+}
+.step-2 .card-desc {
+  color: rgba(31, 31, 31, 0.9);
+}
+.step-2 .card-tray {
+  background: var(--chrome-yellow-tray);
+}
+.step-2 .btn-dock-primary {
+  background: #1f1f1f;
+  color: #ffffff;
+  border-color: #1f1f1f;
+}
+.step-2 .btn-dock-primary:hover {
+  background: #333333;
+}
+
+/* 3단계: Chrome Mint Green (크롬 초록) */
+.step-3 .card-hero {
+  background: var(--chrome-green);
+  color: #1f1f1f;
+}
+.step-3 .card-step-badge {
+  color: rgba(31, 31, 31, 0.75);
+}
+.step-3 .card-scope-badge {
+  background: rgba(31, 31, 31, 0.08);
+  color: #1f1f1f;
+  border: 1px solid rgba(31, 31, 31, 0.16);
+}
+.step-3 .card-headline {
+  color: #1f1f1f;
+}
+.step-3 .card-desc {
+  color: rgba(31, 31, 31, 0.9);
+}
+.step-3 .card-tray {
+  background: var(--chrome-green-tray);
+}
+.step-3 .btn-dock-primary {
+  background: var(--chrome-green-dark);
+  color: #ffffff;
+  border-color: var(--chrome-green-dark);
+}
+.step-3 .btn-dock-primary:hover {
+  background: #0d5224;
+}
+
+/* 4단계: Chrome Coral Red (크롬 빨강) */
+.step-4 .card-hero {
+  background: var(--chrome-red);
+  color: #ffffff;
+}
+.step-4 .card-step-badge {
+  color: rgba(255, 255, 255, 0.85);
+}
+.step-4 .card-scope-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.step-4 .card-headline {
+  color: #ffffff;
+}
+.step-4 .card-desc {
+  color: rgba(255, 255, 255, 0.95);
+}
+.step-4 .card-tray {
+  background: var(--chrome-red-tray);
+}
+.step-4 .btn-dock-primary {
+  background: var(--chrome-red-dark);
+  color: #ffffff;
+  border-color: var(--chrome-red-dark);
+}
+.step-4 .btn-dock-primary:hover {
+  background: #9e1a17;
+}
+
+/* ==========================================================================
+   Phrase Drawer (Google Filter Chips Style)
+   ========================================================================== */
+.phrase-drawer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-default);
+  justify-content: center;
+}
+
+.phrase-pill {
+  background: var(--bg-pill);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.phrase-pill:hover {
+  background: var(--chrome-blue-tray);
+  color: var(--text-primary);
+  border-color: var(--chrome-blue);
+}
+
+/* 다크 테마 시 스텝 카드별 고대비 가독성 최적화 */
+@media (prefers-color-scheme: dark) {
+  .step-2 .card-hero,
+  .step-3 .card-hero {
+    color: #ffffff;
+  }
+  .step-2 .card-step-badge,
+  .step-3 .card-step-badge {
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .step-2 .card-scope-badge,
+  .step-3 .card-scope-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+  .step-2 .card-headline,
+  .step-3 .card-headline {
+    color: #ffffff;
+  }
+  .step-2 .card-desc,
+  .step-3 .card-desc {
+    color: rgba(255, 255, 255, 0.95);
+  }
+  .step-2 .btn-dock-primary {
+    background: #e37400;
+    border-color: #e37400;
+    color: #ffffff;
+  }
+  .step-2 .btn-dock-primary:hover {
+    background: #f29900;
+  }
+  .step-3 .btn-dock-primary {
+    background: #1e8e3e;
+    border-color: #1e8e3e;
+    color: #ffffff;
+  }
+  .step-3 .btn-dock-primary:hover {
+    background: #34a853;
+  }
+  .step-4 .btn-dock-primary {
+    background: #d93025;
+    border-color: #d93025;
+    color: #ffffff;
+  }
+  .step-4 .btn-dock-primary:hover {
+    background: #ea4335;
+  }
+  .icon-only-actions .btn-dock {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    color: #e8eaed;
+  }
+  .icon-only-actions .btn-dock:hover {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+  }
+  .dock-legend-bar {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+  .empty-card {
+    background: var(--bg-surface);
+  }
+}
+
+.phrase-loading {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.app-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: space-between;
+}
+
+.footer-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.footer-link:hover {
+  color: var(--chrome-blue);
+  text-decoration: underline;
+}

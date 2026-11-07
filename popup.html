@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serendipity Drift</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <div class="logo">
+        <svg class="chrome-logo" viewBox="0 0 48 48" width="24" height="24" fill="none">
+          <circle cx="24" cy="24" r="23" fill="#ffffff" stroke="#e0e3e7" stroke-width="0.5"/>
+          <path d="M24 4.5C15.8 4.5 8.7 9.4 5.5 16.5L16.2 35.1C18.4 36.6 21.1 37.5 24 37.5C31.5 37.5 37.5 31.5 37.5 24C37.5 23.3 37.4 22.7 37.3 22H24V4.5Z" fill="#ea4335"/>
+          <path d="M43.5 24C43.5 18.5 41.3 13.5 37.8 9.9L24 33.8H12.3L22.9 43.1C23.3 43.1 23.6 43.2 24 43.2C34.8 43.2 43.5 34.5 43.5 24Z" fill="#fbbc04"/>
+          <path d="M4.5 24C4.5 29.5 6.7 34.5 10.2 38.1L24 14.2H35.7L25.1 4.9C24.7 4.9 24.4 4.8 24 4.8C13.2 4.8 4.5 13.5 4.5 24Z" fill="#34a853"/>
+          <circle cx="24" cy="24" r="9.5" fill="#ffffff"/>
+          <circle cx="24" cy="24" r="7.5" fill="#1a73e8"/>
+        </svg>
+        <div>
+          <h2>Serendipity Drift</h2>
+          <p>Chrome Built-in AI 온디바이스 검색</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="status-card" id="status-card">
+      <div class="status-indicator">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-title" id="status-title">AI 모델 점검 중...</span>
+      </div>
+      <p class="status-desc" id="status-desc">브라우저 내장 Gemini Nano 가용성을 확인하고 있습니다.</p>
+    </div>
+
+    <div class="quick-actions">
+      <button id="open-panel-btn" class="action-btn action-primary">
+        📖 사이드패널 열기
+      </button>
+    </div>
+
+    <section class="usage-guide">
+      <h4>⚡ 주요 사용법</h4>
+      <ul class="guide-list">
+        <li>
+          <strong>1. 크롬 주소창</strong>
+          <span>주소창에 <code>drift 검색어</code>를 치면 비틀린 검색어가 자동 추천됩니다.</span>
+        </li>
+        <li>
+          <strong>2. 구글 검색창</strong>
+          <span>구글 검색 시 상단에 크롬 공식 스타일 4단계 카드가 나타납니다.</span>
+        </li>
+        <li>
+          <strong>3. 사유의 가지치기</strong>
+          <span>조각을 클릭하여 새로운 시발점으로 도약할 수 있습니다.</span>
+        </li>
+      </ul>
+    </section>
+
+    <footer class="popup-footer">
+      <a href="#" id="flags-guide-link">⚙️ Gemini Nano 활성화 가이드</a>
+    </footer>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

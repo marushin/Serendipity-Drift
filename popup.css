@@ -1,0 +1,222 @@
+/* Popup CSS - Google Chrome Style */
+
+:root {
+  --bg-page: #f8fafd;
+  --bg-surface: #ffffff;
+  --text-primary: #1f1f1f;
+  --text-secondary: #444746;
+  --text-muted: #5f6368;
+  --border-subtle: #e0e3e7;
+  --chrome-blue: #0b57d0;
+  --chrome-blue-hover: #0842a0;
+  --btn-primary-text: #ffffff;
+  --code-bg: #e8eaed;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #202124;
+    --bg-surface: #2d2e31;
+    --text-primary: #e8eaed;
+    --text-secondary: #bdc1c6;
+    --text-muted: #9aa0a6;
+    --border-subtle: #3c4043;
+    --chrome-blue: #8ab4f8;
+    --chrome-blue-hover: #aecbfa;
+    --btn-primary-text: #202124;
+    --code-bg: #3c4043;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 320px;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: "Google Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.popup-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.logo p {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Status Card */
+.status-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+  transition: all 0.2s ease;
+}
+
+.status-card:hover {
+  border-color: var(--chrome-blue);
+  box-shadow: 0 2px 6px rgba(11, 87, 208, 0.15);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #747775;
+}
+
+.status-dot.ready {
+  background-color: #1e8e3e;
+  box-shadow: 0 0 4px #1e8e3e;
+}
+
+.status-dot.downloading {
+  background-color: #f9ab00;
+  box-shadow: 0 0 4px #f9ab00;
+}
+
+.status-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.status-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: flex;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.action-primary {
+  background: var(--chrome-blue);
+  color: var(--btn-primary-text);
+  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.3);
+}
+
+.action-primary:hover {
+  background: var(--chrome-blue-hover);
+  box-shadow: 0 2px 6px rgba(11, 87, 208, 0.4);
+}
+
+/* Guide */
+.usage-guide {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.06);
+}
+
+.usage-guide h4 {
+  font-size: 12px;
+  color: var(--chrome-blue);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.guide-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guide-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guide-list strong {
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.guide-list span {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.guide-list code {
+  background: var(--code-bg);
+  color: var(--text-primary);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* Footer */
+.popup-footer {
+  text-align: center;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.popup-footer a {
+  font-size: 11px;
+  color: var(--chrome-blue);
+  text-decoration: none;
+}
+
+.popup-footer a:hover {
+  text-decoration: underline;
+}

@@ -4,48 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Serendipity Drift - Chrome Built-in AI 설정 가이드</title>
+  <meta name="color-scheme" content="light dark">
   <style>
     :root {
+      color-scheme: light dark;
       --bg: #f8fafd;
       --bg-card: #ffffff;
+      --bg-code: #f1f3f4;
+      --bg-highlight: #e8f0fe;
+      --bg-note: #fef7e0;
       --accent: #0b57d0;
-      --accent-light: #d3e3fd;
       --accent-hover: #0842a0;
+      --on-accent: #ffffff;
+      --ok: #137333;
       --text: #1f1f1f;
+      --text-body: #3c4043;
       --text-muted: #5f6368;
+      --text-code: #0b57d0;
+      --note-fg: #8a5300;
+      --note-border: #f9dc8c;
       --border: #dfe1e5;
       --card-radius: 20px;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1a1a1c;
         --bg-card: #252629;
+        --bg-code: #202124;
+        --bg-highlight: #172b4d;
+        --bg-note: #3b2f12;
         --accent: #8ab4f8;
-        --accent-light: #aecbfa;
-        --accent-hover: #adc8fa;
+        --accent-hover: #aecbfa;
+        --on-accent: #202124;
+        --ok: #81c995;
         --text: #e8eaed;
+        --text-body: #bdc1c6;
         --text-muted: #9aa0a6;
+        --text-code: #8ab4f8;
+        --note-fg: #fdd663;
+        --note-border: #6b5420;
         --border: #3c4043;
-      }
-      li {
-        color: #bdc1c6 !important;
-      }
-      .code-row {
-        background: #202124 !important;
-      }
-      .highlight-box {
-        background: #172b4d !important;
-        color: #e8eaed !important;
-      }
-      h1 {
-        color: #e8eaed !important;
-      }
-      .copy-btn {
-        background: #8ab4f8 !important;
-        color: #202124 !important;
-      }
-      .copy-btn:hover {
-        background: #aecbfa !important;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
       }
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,6 +55,10 @@
       font-family: "Google Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       line-height: 1.6;
       padding: 40px 20px;
+    }
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
     .container {
       max-width: 820px;
@@ -82,7 +86,7 @@
     h1 {
       font-size: 28px;
       font-weight: 800;
-      color: #1f1f1f;
+      color: var(--text);
       letter-spacing: -0.5px;
       margin-bottom: 8px;
     }
@@ -95,7 +99,7 @@
       border: 1px solid var(--border);
       border-radius: var(--card-radius);
       padding: 24px 28px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--shadow);
     }
     h2 {
       font-size: 18px;
@@ -106,6 +110,11 @@
       align-items: center;
       gap: 8px;
     }
+    .lead {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
     ol, ul {
       padding-left: 20px;
       display: flex;
@@ -113,15 +122,22 @@
       gap: 14px;
     }
     li {
-      color: #3c4043;
+      color: var(--text-body);
       font-size: 14px;
       line-height: 1.6;
+    }
+    li strong {
+      color: var(--text);
+    }
+    .compact-list {
+      gap: 6px;
     }
     .code-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #f1f3f4;
+      gap: 10px;
+      background: var(--bg-code);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 8px 14px;
@@ -129,7 +145,7 @@
     }
     code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      color: #0b57d0;
+      color: var(--text-code);
       font-size: 13px;
       font-weight: 600;
       word-break: break-all;
@@ -137,32 +153,44 @@
     .copy-btn {
       background: var(--accent);
       border: none;
-      color: #ffffff;
+      color: var(--on-accent);
       border-radius: 8px;
       padding: 6px 14px;
       font-size: 12px;
       font-weight: 600;
+      font-family: inherit;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background-color 0.2s ease;
       flex-shrink: 0;
-      margin-left: 10px;
     }
     .copy-btn:hover {
       background: var(--accent-hover);
     }
     .copy-btn.copied {
-      background: #1e8e3e !important;
-      color: #fff !important;
+      background: var(--ok);
+      color: var(--on-accent);
     }
-    .highlight-box {
-      background: #e8f0fe;
+    .highlight-box,
+    .note-box {
       border-left: 4px solid var(--accent);
       padding: 14px 18px;
       border-radius: 0 10px 10px 0;
       font-size: 13.5px;
-      color: #1f1f1f;
       margin-top: 16px;
       line-height: 1.5;
+      background: var(--bg-highlight);
+      color: var(--text);
+    }
+    .note-box {
+      background: var(--bg-note);
+      border-left-color: var(--note-border);
+      color: var(--note-fg);
+    }
+    .note-box code {
+      color: inherit;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .copy-btn { transition: none; }
     }
   </style>
 </head>
@@ -170,7 +198,7 @@
   <div class="container">
     <header>
       <div class="logo-badge">
-        <svg viewBox="0 0 48 48" fill="none">
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
           <path d="M24 4.5C15.8 4.5 8.7 9.4 5.5 16.5L16.2 35.1C18.4 36.6 21.1 37.5 24 37.5C31.5 37.5 37.5 31.5 37.5 24C37.5 23.3 37.4 22.7 37.3 22H24V4.5Z" fill="#ea4335"/>
           <path d="M43.5 24C43.5 18.5 41.3 13.5 37.8 9.9L24 33.8H12.3L22.9 43.1C23.3 43.1 23.6 43.2 24 43.2C34.8 43.2 43.5 34.5 43.5 24Z" fill="#fbbc04"/>
           <path d="M4.5 24C4.5 29.5 6.7 34.5 10.2 38.1L24 14.2H35.7L25.1 4.9C24.7 4.9 24.4 4.8 24 4.8C13.2 4.8 4.5 13.5 4.5 24Z" fill="#34a853"/>
@@ -184,7 +212,7 @@
 
     <section class="card">
       <h2>🚀 크롬 내장 Gemini Nano 모델 활성화 방법 (최초 1회)</h2>
-      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 14px;">
+      <p class="lead">
         Chrome 128 이상 버전에서는 기기 내부에 경량 AI 모델(Gemini Nano)을 활성화하여 백엔드 없이 무료로 호출할 수 있습니다.
       </p>
 
@@ -194,7 +222,7 @@
           아래 주소를 복사하여 새 탭 주소창에 붙여넣고 이동한 뒤, 설정을 <strong>Enabled</strong>로 변경합니다.
           <div class="code-row">
             <code>chrome://flags/#prompt-api-for-gemini-nano</code>
-            <button class="copy-btn" data-copy="chrome://flags/#prompt-api-for-gemini-nano">복사</button>
+            <button type="button" class="copy-btn" data-copy="chrome://flags/#prompt-api-for-gemini-nano">복사</button>
           </div>
         </li>
         <li>
@@ -202,7 +230,7 @@
           아래 주소로 이동하여 설정을 <strong>Enabled BypassPerfRequirement</strong>로 변경합니다.
           <div class="code-row">
             <code>chrome://flags/#optimization-guide-on-device-model</code>
-            <button class="copy-btn" data-copy="chrome://flags/#optimization-guide-on-device-model">복사</button>
+            <button type="button" class="copy-btn" data-copy="chrome://flags/#optimization-guide-on-device-model">복사</button>
           </div>
         </li>
         <li>
@@ -214,7 +242,7 @@
           크롬 주소창에 아래 주소로 접속한 뒤 <code>Optimization Guide On Device Model</code> 항목의 <strong>[Check for update (업데이트 확인)]</strong>을 누릅니다. 모델(약 1~2GB) 다운로드가 완료되면 상태가 <code>Up-to-date</code>로 바뀝니다.
           <div class="code-row">
             <code>chrome://components</code>
-            <button class="copy-btn" data-copy="chrome://components">복사</button>
+            <button type="button" class="copy-btn" data-copy="chrome://components">복사</button>
           </div>
         </li>
       </ol>
@@ -225,8 +253,21 @@
     </section>
 
     <section class="card">
-      <h2>⚡ 크롬 검색창을 활용하는 3가지 탐색 방법</h2>
-      <ul>
+      <h2>🖥️ 기기 요구사항</h2>
+      <p class="lead">플래그를 켰는데도 모델이 내려받아지지 않는다면 대부분 아래 조건 때문입니다. (Chrome 공식 문서 기준이며 버전에 따라 바뀔 수 있습니다.)</p>
+      <ul class="compact-list">
+        <li><strong>운영체제:</strong> Windows 10/11, macOS 13 이상, Linux, 또는 Chromebook Plus</li>
+        <li><strong>저장 공간:</strong> Chrome 프로필이 있는 드라이브에 여유 공간 약 22GB 이상 (모델 자체는 더 작지만 여유 공간이 부족하면 다운로드하지 않으며, 공간이 줄면 자동 삭제됩니다)</li>
+        <li><strong>GPU 또는 CPU:</strong> VRAM 4GB를 넘는 GPU, 또는 RAM 16GB 이상 + 4코어 이상 CPU</li>
+        <li><strong>네트워크:</strong> 데이터 제한이 없는(무제한) 연결</li>
+      </ul>
+      <div class="note-box">
+        조건을 만족하지 않는 기기에서도 확장 프로그램은 <strong>내장 연상 모드</strong>로 계속 동작합니다.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>⚡ 크롬 검색창을 활용하는 3가지 탐색 방법</h2>      <ul>
         <li>
           <strong>1. 크롬 주소창(Omnibox)에서 바로 비틀기:</strong><br>
           주소창에 <code>drift 검색어</code> (예: <code>drift 인공지능</code>)를 입력하면, 1~4단계 비틀린 검색어가 주소창 자동완성에 즉시 추천됩니다. 엔터를 치면 해당 검색어로 구글 검색창이 바로 열립니다.

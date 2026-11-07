@@ -87,7 +87,7 @@
       id: HOME_BTN_ID,
       type: 'button',
       value: '🌐 Chrome AI 비틀어 검색',
-      className: 'serendipity-google-btn'
+      className: `serendipity-google-btn${detectDarkTheme() ? ' serendipity-dark' : ''}`
     });
 
     driftBtn.addEventListener('click', async (e) => {
@@ -117,16 +117,29 @@
   /* 검색 결과 상단 바                                                 */
   /* -------------------------------------------------------------- */
 
+  /**
+   * Google 페이지 자체의 테마를 판정합니다.
+   * OS 가 다크여도 Google 을 라이트 테마로 쓰는 사용자가 있으므로
+   * 페이지의 명시적 표시 → 실제 배경색 → OS 설정 순서로 확인합니다.
+   */
   function detectDarkTheme() {
-    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return true;
-    if (document.documentElement.getAttribute('data-darkmode') === 'true') return true;
-    if (document.body.classList.contains('dark')) return true;
-    try {
-      const m = getComputedStyle(document.body).backgroundColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-      return m ? (m[1] * 0.299 + m[2] * 0.587 + m[3] * 0.114) < 128 : false;
-    } catch (_) {
-      return false;
+    const attr = document.documentElement.getAttribute('data-darkmode');
+    if (attr === 'true') return true;
+    if (attr === 'false') return false;
+
+    for (const node of [document.body, document.documentElement]) {
+      if (!node) continue;
+      try {
+        const m = getComputedStyle(node).backgroundColor
+          .match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+        if (!m) continue;
+        const alpha = m[4] === undefined ? 1 : parseFloat(m[4]);
+        if (alpha === 0) continue; // 투명 배경은 판단 근거가 아님
+        return (m[1] * 0.299 + m[2] * 0.587 + m[3] * 0.114) < 128;
+      } catch (_) {}
     }
+
+    return !!window.matchMedia?.('(prefers-color-scheme: dark)').matches;
   }
 
   // 정적 마크업(외부 데이터 없음)
@@ -308,7 +321,8 @@
   }
 
   // 구글의 동적 페이지 전환 감지.
-  // 문서 전체 MutationObserver 대신 Navigation API(pushState 포함)를 사용하고,
+  // 문서 전체 MutationObserver 대신 Navigation API 를 사용합니다.
+  // currententrychange 는 pushState/replaceState/뒤로가기를 모두 잡습니다.
   // 미지원 브라우저에서만 가벼운 URL 폴링으로 대체합니다.
   let lastUrl = location.href;
   const onMaybeNavigated = () => {
@@ -318,7 +332,7 @@
   };
 
   if (window.navigation?.addEventListener) {
-    window.navigation.addEventListener('navigatesuccess', onMaybeNavigated);
+    window.navigation.addEventListener('currententrychange', onMaybeNavigated);
   } else {
     setInterval(onMaybeNavigated, 1000);
   }

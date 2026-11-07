@@ -1,16 +1,26 @@
-/* Popup CSS - Google Chrome Style */
+/* Popup — 모든 색은 토큰으로만 정의, 다크 모드는 토큰 덮어쓰기 */
 
 :root {
+  color-scheme: light dark;
   --bg-page: #f8fafd;
   --bg-surface: #ffffff;
   --text-primary: #1f1f1f;
   --text-secondary: #444746;
   --text-muted: #5f6368;
   --border-subtle: #e0e3e7;
-  --chrome-blue: #0b57d0;
-  --chrome-blue-hover: #0842a0;
-  --btn-primary-text: #ffffff;
+  --border-default: #dadce0;
+  --accent-text: #0b57d0;
+  --accent-fill: #0b57d0;
+  --accent-fill-hover: #0842a0;
+  --on-accent: #ffffff;
+  --accent-tint: #e8f0fe;
+  --accent-tint-hover: #d2e3fc;
   --code-bg: #e8eaed;
+  --dot-idle: #747775;
+  --dot-ready: #1e8e3e;
+  --dot-warn: #f9ab00;
+  --error-fg: #a50e0e;
+  --shadow-sm: 0 1px 3px rgba(60, 64, 67, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,10 +31,19 @@
     --text-secondary: #bdc1c6;
     --text-muted: #9aa0a6;
     --border-subtle: #3c4043;
-    --chrome-blue: #8ab4f8;
-    --chrome-blue-hover: #aecbfa;
-    --btn-primary-text: #202124;
+    --border-default: #5f6368;
+    --accent-text: #8ab4f8;
+    --accent-fill: #8ab4f8;
+    --accent-fill-hover: #aecbfa;
+    --on-accent: #202124;
+    --accent-tint: #1c2b45;
+    --accent-tint-hover: #24385a;
     --code-bg: #3c4043;
+    --dot-idle: #9aa0a6;
+    --dot-ready: #81c995;
+    --dot-warn: #fdd663;
+    --error-fg: #f6aea9;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -42,6 +61,19 @@ body {
   font-size: 13px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .popup-container {
@@ -65,7 +97,7 @@ body {
   gap: 10px;
 }
 
-.logo h2 {
+.logo h1 {
   font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
@@ -77,43 +109,40 @@ body {
   color: var(--text-muted);
 }
 
-/* Status Card */
+/* 상태 카드 — 클릭 영역이 아님 (동작은 내부 버튼으로만) */
 .status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
   padding: 12px 14px;
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
-  transition: all 0.2s ease;
-}
-
-.status-card:hover {
-  border-color: var(--chrome-blue);
-  box-shadow: 0 2px 6px rgba(11, 87, 208, 0.15);
+  box-shadow: var(--shadow-sm);
 }
 
 .status-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background-color: #747775;
+  background-color: var(--dot-idle);
 }
 
 .status-dot.ready {
-  background-color: #1e8e3e;
-  box-shadow: 0 0 4px #1e8e3e;
+  background-color: var(--dot-ready);
+  box-shadow: 0 0 4px var(--dot-ready);
 }
 
 .status-dot.downloading {
-  background-color: #f9ab00;
-  box-shadow: 0 0 4px #f9ab00;
+  background-color: var(--dot-warn);
+  box-shadow: 0 0 4px var(--dot-warn);
 }
 
 .status-title {
@@ -128,7 +157,18 @@ body {
   line-height: 1.4;
 }
 
-/* Quick Actions */
+.status-desc.is-error {
+  color: var(--error-fg);
+}
+
+.download-progress {
+  width: 100%;
+  height: 6px;
+  margin-top: 4px;
+  accent-color: var(--accent-fill);
+}
+
+/* 버튼 */
 .quick-actions {
   display: flex;
 }
@@ -139,35 +179,80 @@ body {
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
-  font-family: inherit;
   cursor: pointer;
   border: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .action-primary {
-  background: var(--chrome-blue);
-  color: var(--btn-primary-text);
-  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.3);
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-sm);
 }
 
 .action-primary:hover {
-  background: var(--chrome-blue-hover);
-  box-shadow: 0 2px 6px rgba(11, 87, 208, 0.4);
+  background: var(--accent-fill-hover);
 }
 
-/* Guide */
+.action-secondary {
+  margin-top: 6px;
+  padding: 8px;
+  font-size: 12px;
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border: 1px solid var(--border-default);
+}
+
+.action-secondary:hover {
+  background: var(--accent-tint-hover);
+}
+
+.action-btn:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+/* 자동 실행 토글 */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.setting-row strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 12.5px;
+}
+
+.setting-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-fill);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* 사용법 */
 .usage-guide {
   background: var(--bg-surface);
   border-radius: 16px;
   padding: 12px 14px;
   border: 1px solid var(--border-subtle);
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 
-.usage-guide h4 {
+.usage-guide h2 {
   font-size: 12px;
-  color: var(--chrome-blue);
+  color: var(--accent-text);
   margin-bottom: 8px;
   font-weight: 700;
 }
@@ -201,50 +286,31 @@ body {
   color: var(--text-primary);
   padding: 1px 5px;
   border-radius: 4px;
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Footer */
+/* 푸터 */
 .popup-footer {
   text-align: center;
   padding-top: 6px;
   border-top: 1px solid var(--border-subtle);
 }
 
-.popup-footer a {
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   font-size: 11px;
-  color: var(--chrome-blue);
-  text-decoration: none;
+  color: var(--accent-text);
 }
 
-.popup-footer a:hover {
+.link-btn:hover {
   text-decoration: underline;
 }
 
-/* ---- v1.1: 자동 실행 토글 ---- */
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 10px 14px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-
-.setting-row strong {
-  display: block;
-  color: var(--text-primary);
-  font-size: 12.5px;
-}
-
-.setting-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--chrome-blue);
-  flex-shrink: 0;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }

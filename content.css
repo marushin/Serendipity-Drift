@@ -1,15 +1,75 @@
-/* Google Chrome Official Website Design - Injected Content Widget */
+/* ==========================================================================
+   Serendipity Drift — Google 검색 페이지 주입 위젯
+   테마는 OS 설정이 아니라 Google 페이지 자체의 테마를 따릅니다.
+   content.js 가 페이지 배경을 보고 .serendipity-dark 를 붙이며,
+   모든 색은 아래 변수로만 정의합니다 (다크 = 변수 덮어쓰기).
+   ========================================================================== */
 
+.serendipity-drift-container,
+.serendipity-google-btn {
+  --sd-bg: #ffffff;
+  --sd-border: #dfe1e5;
+  --sd-divider: #f1f3f4;
+  --sd-text: #1f1f1f;
+  --sd-text-2: #444746;
+  --sd-muted: #5f6368;
+  --sd-surface-2: #f8fafd;
+  --sd-surface-2-border: #e0e3e7;
+  --sd-accent: #0b57d0;
+  --sd-accent-hover: #0842a0;
+  --sd-on-accent: #ffffff;
+  --sd-btn-bg: #f1f3f4;
+  --sd-btn-border: #dadce0;
+  --sd-btn-hover: #e8eaed;
+  --sd-badge-bg: #e8f0fe;
+  --sd-warn-bg: #fef7e0;
+  --sd-warn-fg: #8a5300;
+  --sd-warn-border: #f9dc8c;
+  --sd-error: #c5221f;
+  --sd-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --sd-chip-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+  --sd-chip-shadow-hover: 0 4px 12px rgba(60, 64, 67, 0.16);
+}
+
+.serendipity-dark.serendipity-drift-container,
+.serendipity-dark.serendipity-google-btn {
+  --sd-bg: #202124;
+  --sd-border: #3c4043;
+  --sd-divider: #303134;
+  --sd-text: #e8eaed;
+  --sd-text-2: #bdc1c6;
+  --sd-muted: #9aa0a6;
+  --sd-surface-2: #2d2e31;
+  --sd-surface-2-border: #3c4043;
+  --sd-accent: #8ab4f8;
+  --sd-accent-hover: #aecbfa;
+  --sd-on-accent: #202124;
+  --sd-btn-bg: #303134;
+  --sd-btn-border: #5f6368;
+  --sd-btn-hover: #3c4043;
+  --sd-badge-bg: #172b4d;
+  --sd-warn-bg: #3b2f12;
+  --sd-warn-fg: #fdd663;
+  --sd-warn-border: #6b5420;
+  --sd-error: #f28b82;
+  --sd-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --sd-chip-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --sd-chip-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   컨테이너 & 헤더
+   -------------------------------------------------------------------------- */
 .serendipity-drift-container {
   margin: 14px 0 24px 0;
   padding: 16px 20px;
   max-width: 720px;
-  background: #ffffff;
-  border: 1px solid #dfe1e5;
+  background: var(--sd-bg);
+  border: 1px solid var(--sd-border);
   border-radius: 24px;
-  color: #1f1f1f;
+  color: var(--sd-text);
   font-family: "Google Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--sd-shadow);
   position: relative;
   z-index: 20;
   box-sizing: border-box;
@@ -23,7 +83,7 @@
   gap: 12px;
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: 1px solid var(--sd-divider);
 }
 
 .serendipity-title-group {
@@ -40,13 +100,13 @@
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #1f1f1f;
+  color: var(--sd-text);
   letter-spacing: -0.2px;
 }
 
 .serendipity-badge {
-  background: #e8f0fe;
-  color: #0b57d0;
+  background: var(--sd-badge-bg);
+  color: var(--sd-accent);
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
@@ -54,6 +114,9 @@
   letter-spacing: 0.2px;
 }
 
+/* --------------------------------------------------------------------------
+   버튼
+   -------------------------------------------------------------------------- */
 .serendipity-actions {
   display: flex;
   align-items: center;
@@ -61,49 +124,58 @@
 }
 
 .serendipity-btn {
-  background: #f1f3f4;
-  border: 1px solid #dadce0;
-  color: #1f1f1f;
+  background: var(--sd-btn-bg);
+  border: 1px solid var(--sd-btn-border);
+  color: var(--sd-text);
   border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
   padding: 6px 14px;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
 .serendipity-btn:hover {
-  background: #e8eaed;
-  border-color: #c7c7c7;
+  background: var(--sd-btn-hover);
 }
 
 .serendipity-btn-primary {
-  background: #0b57d0;
-  border-color: #0b57d0;
-  color: #ffffff;
+  background: var(--sd-accent);
+  border-color: var(--sd-accent);
+  color: var(--sd-on-accent);
 }
 
 .serendipity-btn-primary:hover {
-  background: #0842a0;
-  border-color: #0842a0;
-  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.3);
+  background: var(--sd-accent-hover);
+  border-color: var(--sd-accent-hover);
 }
 
+.serendipity-btn:focus-visible,
+.serendipity-stage-chip:focus-visible,
+.serendipity-google-btn:focus-visible {
+  outline: 2px solid var(--sd-accent);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   벡터 표시줄
+   -------------------------------------------------------------------------- */
 .serendipity-vector-tag {
-  background: #f8fafd;
-  border: 1px solid #e0e3e7;
+  background: var(--sd-surface-2);
+  border: 1px solid var(--sd-surface-2-border);
   border-radius: 12px;
   padding: 8px 14px;
   margin-bottom: 14px;
   font-size: 12px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  color: #444746;
+  gap: 6px 8px;
+  color: var(--sd-text-2);
 }
 
 .serendipity-vector-icon {
@@ -111,67 +183,80 @@
 }
 
 .serendipity-vector-name {
-  color: #0b57d0;
+  color: var(--sd-accent);
   font-weight: 700;
 }
 
 .serendipity-vector-prompt {
-  color: #5f6368;
+  color: var(--sd-muted);
 }
 
+.serendipity-error {
+  color: var(--sd-error);
+  font-weight: 600;
+}
+
+.serendipity-fallback-badge {
+  margin-left: auto;
+  background: var(--sd-warn-bg);
+  color: var(--sd-warn-fg);
+  border: 1px solid var(--sd-warn-border);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 100px;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.serendipity-run-btn {
+  margin-left: auto;
+}
+
+/* --------------------------------------------------------------------------
+   4단계 칩 (각 단계는 색 변수만 다름)
+   -------------------------------------------------------------------------- */
 .serendipity-chips-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
 
-/* Base Stage Chip */
+.chip-step-1 { --chip-bg: #f0f6ff; --chip-border: #d3e3fd; --chip-accent: #0b57d0; --chip-query: #0b57d0; }
+.chip-step-2 { --chip-bg: #fefcf3; --chip-border: #feefc3; --chip-accent: #b06000; --chip-query: #8c4c00; }
+.chip-step-3 { --chip-bg: #f2f9f4; --chip-border: #ceead6; --chip-accent: #137333; --chip-query: #137333; }
+.chip-step-4 { --chip-bg: #fef6f6; --chip-border: #fad2cf; --chip-accent: #c5221f; --chip-query: #c5221f; }
+
+.serendipity-dark .chip-step-1 { --chip-bg: #142233; --chip-border: #1e3c60; --chip-accent: #8ab4f8; --chip-query: #d2e3fc; }
+.serendipity-dark .chip-step-2 { --chip-bg: #2b1f0c; --chip-border: #593c12; --chip-accent: #fdd663; --chip-query: #feefc3; }
+.serendipity-dark .chip-step-3 { --chip-bg: #102416; --chip-border: #1d4d2b; --chip-accent: #81c995; --chip-query: #ceead6; }
+.serendipity-dark .chip-step-4 { --chip-bg: #2b1313; --chip-border: #5c2020; --chip-accent: #f28b82; --chip-query: #fad2cf; }
+
+a.serendipity-stage-chip,
+a.serendipity-stage-chip:hover,
+a.serendipity-stage-chip:visited {
+  text-decoration: none;
+  color: inherit;
+}
+
 .serendipity-stage-chip {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
   border-radius: 18px;
   padding: 14px 14px 12px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  border: 1px solid transparent;
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+  box-shadow: var(--sd-chip-shadow);
 }
 
 .serendipity-stage-chip:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(60, 64, 67, 0.16);
+  box-shadow: var(--sd-chip-shadow-hover);
 }
-
-/* Chrome 4 Colors for Chips */
-.chip-step-1 {
-  background: #f0f6ff;
-  border-color: #d3e3fd;
-}
-.chip-step-1 .serendipity-stage-rank { color: #0b57d0; }
-.chip-step-1 .serendipity-chip-query { color: #0b57d0; }
-
-.chip-step-2 {
-  background: #fefcf3;
-  border-color: #feefc3;
-}
-.chip-step-2 .serendipity-stage-rank { color: #b06000; }
-.chip-step-2 .serendipity-chip-query { color: #8c4c00; }
-
-.chip-step-3 {
-  background: #f2f9f4;
-  border-color: #ceead6;
-}
-.chip-step-3 .serendipity-stage-rank { color: #137333; }
-.chip-step-3 .serendipity-chip-query { color: #137333; }
-
-.chip-step-4 {
-  background: #fef6f6;
-  border-color: #fad2cf;
-}
-.chip-step-4 .serendipity-stage-rank { color: #c5221f; }
-.chip-step-4 .serendipity-chip-query { color: #c5221f; }
 
 .serendipity-chip-meta {
   display: flex;
@@ -184,6 +269,7 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.2px;
+  color: var(--chip-accent);
 }
 
 .serendipity-chip-query {
@@ -192,11 +278,12 @@
   margin-bottom: 6px;
   line-height: 1.3;
   word-break: keep-all;
+  color: var(--chip-query);
 }
 
 .serendipity-chip-exp {
   font-size: 12px;
-  color: #444746;
+  color: var(--sd-text-2);
   line-height: 1.45;
   margin-bottom: 8px;
   display: -webkit-box;
@@ -207,20 +294,22 @@
 
 .serendipity-chip-link {
   font-size: 11px;
-  color: #0b57d0;
+  color: var(--chip-accent);
   text-decoration: underline;
   font-weight: 600;
   align-self: flex-start;
 }
 
-/* Spinner */
+/* --------------------------------------------------------------------------
+   스피너
+   -------------------------------------------------------------------------- */
 .serendipity-spinner {
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid #d3e3fd;
+  border: 2px solid var(--sd-badge-bg);
   border-radius: 50%;
-  border-top-color: #0b57d0;
+  border-top-color: var(--sd-accent);
   animation: serendipity-spin 0.8s linear infinite;
   vertical-align: middle;
 }
@@ -229,264 +318,46 @@
   to { transform: rotate(360deg); }
 }
 
-/* Google Home Page Injected Button */
+/* --------------------------------------------------------------------------
+   Google 홈 화면 버튼 (Google 스타일을 이기기 위해 !important 유지)
+   -------------------------------------------------------------------------- */
 .serendipity-google-btn {
   margin-left: 10px !important;
-  background: #f8fafd !important;
-  color: #0b57d0 !important;
-  border: 1px solid #d3e3fd !important;
+  background: var(--sd-surface-2) !important;
+  color: var(--sd-accent) !important;
+  border: 1px solid var(--sd-btn-border) !important;
   border-radius: 4px !important;
   font-size: 14px !important;
   font-family: inherit !important;
   height: 36px !important;
   padding: 0 16px !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease !important;
 }
 
 .serendipity-google-btn:hover {
-  background: #e8f0fe !important;
-  border-color: #0b57d0 !important;
-  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.2) !important;
+  background: var(--sd-badge-bg) !important;
+  border-color: var(--sd-accent) !important;
 }
 
-/* ==========================================================================
-   Dark Theme Support (System prefers-color-scheme or Google Search Dark Mode)
-   ========================================================================== */
-@media (prefers-color-scheme: dark) {
-  .serendipity-drift-container {
-    background: #202124;
-    border-color: #3c4043;
-    color: #e8eaed;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  }
+.serendipity-google-btn:disabled {
+  cursor: progress !important;
+  opacity: 0.8;
+}
 
-  .serendipity-drift-header {
-    border-bottom-color: #303134;
-  }
-
-  .serendipity-heading {
-    color: #e8eaed;
-  }
-
-  .serendipity-badge {
-    background: #172b4d;
-    color: #8ab4f8;
-  }
-
-  .serendipity-btn {
-    background: #303134;
-    border-color: #5f6368;
-    color: #e8eaed;
-  }
-
-  .serendipity-btn:hover {
-    background: #3c4043;
-    border-color: #747775;
-  }
-
-  .serendipity-btn-primary {
-    background: #8ab4f8;
-    border-color: #8ab4f8;
-    color: #202124;
-  }
-
-  .serendipity-btn-primary:hover {
-    background: #aecbfa;
-    border-color: #aecbfa;
-    box-shadow: 0 1px 4px rgba(138, 180, 248, 0.3);
-  }
-
-  .serendipity-vector-tag {
-    background: #2d2e31;
-    border-color: #3c4043;
-    color: #bdc1c6;
-  }
-
-  .serendipity-vector-name {
-    color: #8ab4f8;
-  }
-
-  .serendipity-vector-prompt {
-    color: #9aa0a6;
-  }
-
-  /* Dark mode 4-color chips */
-  .chip-step-1 {
-    background: #142233;
-    border-color: #1e3c60;
-  }
-  .chip-step-1 .serendipity-stage-rank { color: #8ab4f8; }
-  .chip-step-1 .serendipity-chip-query { color: #d2e3fc; }
-  .chip-step-1 .serendipity-chip-link { color: #8ab4f8; }
-
-  .chip-step-2 {
-    background: #2b1f0c;
-    border-color: #593c12;
-  }
-  .chip-step-2 .serendipity-stage-rank { color: #fdd663; }
-  .chip-step-2 .serendipity-chip-query { color: #feefc3; }
-  .chip-step-2 .serendipity-chip-link { color: #fdd663; }
-
-  .chip-step-3 {
-    background: #102416;
-    border-color: #1d4d2b;
-  }
-  .chip-step-3 .serendipity-stage-rank { color: #81c995; }
-  .chip-step-3 .serendipity-chip-query { color: #ceead6; }
-  .chip-step-3 .serendipity-chip-link { color: #81c995; }
-
-  .chip-step-4 {
-    background: #2b1313;
-    border-color: #5c2020;
-  }
-  .chip-step-4 .serendipity-stage-rank { color: #f28b82; }
-  .chip-step-4 .serendipity-chip-query { color: #fad2cf; }
-  .chip-step-4 .serendipity-chip-link { color: #f28b82; }
-
-  .serendipity-chip-exp {
-    color: #9aa0a6;
-  }
-
+/* --------------------------------------------------------------------------
+   모션 줄이기
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .serendipity-stage-chip,
+  .serendipity-btn,
   .serendipity-google-btn {
-    background: #303134 !important;
-    color: #8ab4f8 !important;
-    border-color: #5f6368 !important;
+    transition: none !important;
   }
-
-  .serendipity-google-btn:hover {
-    background: #3c4043 !important;
-    border-color: #8ab4f8 !important;
-    box-shadow: 0 1px 4px rgba(138, 180, 248, 0.25) !important;
+  .serendipity-stage-chip:hover {
+    transform: none;
   }
-}
-
-/* 구글 자체 사이트 다크모드 강제 적용 시 (.serendipity-dark 클래스) */
-.serendipity-dark.serendipity-drift-container {
-  background: #202124;
-  border-color: #3c4043;
-  color: #e8eaed;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-.serendipity-dark .serendipity-drift-header {
-  border-bottom-color: #303134;
-}
-
-.serendipity-dark .serendipity-heading {
-  color: #e8eaed;
-}
-
-.serendipity-dark .serendipity-badge {
-  background: #172b4d;
-  color: #8ab4f8;
-}
-
-.serendipity-dark .serendipity-btn {
-  background: #303134;
-  border-color: #5f6368;
-  color: #e8eaed;
-}
-
-.serendipity-dark .serendipity-btn:hover {
-  background: #3c4043;
-  border-color: #747775;
-}
-
-.serendipity-dark .serendipity-btn-primary {
-  background: #8ab4f8;
-  border-color: #8ab4f8;
-  color: #202124;
-}
-
-.serendipity-dark .serendipity-btn-primary:hover {
-  background: #aecbfa;
-  border-color: #aecbfa;
-  box-shadow: 0 1px 4px rgba(138, 180, 248, 0.3);
-}
-
-.serendipity-dark .serendipity-vector-tag {
-  background: #2d2e31;
-  border-color: #3c4043;
-  color: #bdc1c6;
-}
-
-.serendipity-dark .serendipity-vector-name {
-  color: #8ab4f8;
-}
-
-.serendipity-dark .serendipity-vector-prompt {
-  color: #9aa0a6;
-}
-
-.serendipity-dark .chip-step-1 {
-  background: #142233;
-  border-color: #1e3c60;
-}
-.serendipity-dark .chip-step-1 .serendipity-stage-rank { color: #8ab4f8; }
-.serendipity-dark .chip-step-1 .serendipity-chip-query { color: #d2e3fc; }
-.serendipity-dark .chip-step-1 .serendipity-chip-link { color: #8ab4f8; }
-
-.serendipity-dark .chip-step-2 {
-  background: #2b1f0c;
-  border-color: #593c12;
-}
-.serendipity-dark .chip-step-2 .serendipity-stage-rank { color: #fdd663; }
-.serendipity-dark .chip-step-2 .serendipity-chip-query { color: #feefc3; }
-.serendipity-dark .chip-step-2 .serendipity-chip-link { color: #fdd663; }
-
-.serendipity-dark .chip-step-3 {
-  background: #102416;
-  border-color: #1d4d2b;
-}
-.serendipity-dark .chip-step-3 .serendipity-stage-rank { color: #81c995; }
-.serendipity-dark .chip-step-3 .serendipity-chip-query { color: #ceead6; }
-.serendipity-dark .chip-step-3 .serendipity-chip-link { color: #81c995; }
-
-.serendipity-dark .chip-step-4 {
-  background: #2b1313;
-  border-color: #5c2020;
-}
-.serendipity-dark .chip-step-4 .serendipity-stage-rank { color: #f28b82; }
-.serendipity-dark .chip-step-4 .serendipity-chip-query { color: #fad2cf; }
-.serendipity-dark .chip-step-4 .serendipity-chip-link { color: #f28b82; }
-
-.serendipity-dark .serendipity-chip-exp {
-  color: #9aa0a6;
-}
-
-/* ---- v1.1: 칩 링크화 / 폴백 배지 / 수동 실행 버튼 ---- */
-a.serendipity-stage-chip,
-a.serendipity-stage-chip:hover,
-a.serendipity-stage-chip:visited {
-  text-decoration: none;
-  color: inherit;
-}
-
-a.serendipity-stage-chip:focus-visible {
-  outline: 2px solid #0b57d0;
-  outline-offset: 2px;
-}
-
-.serendipity-fallback-badge {
-  margin-left: auto;
-  background: #fef7e0;
-  color: #8a5300;
-  border: 1px solid #f9dc8c;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 1px 8px;
-  border-radius: 100px;
-  white-space: nowrap;
-  cursor: help;
-}
-
-.serendipity-dark .serendipity-fallback-badge {
-  background: #3b2f12;
-  color: #fdd663;
-  border-color: #6b5420;
-}
-
-.serendipity-run-btn {
-  margin-left: auto;
+  .serendipity-spinner {
+    animation-duration: 2s;
+  }
 }

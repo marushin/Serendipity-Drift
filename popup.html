@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
   <title>Serendipity Drift</title>
   <link rel="stylesheet" href="popup.css">
 </head>
@@ -10,7 +11,7 @@
   <div class="popup-container">
     <header class="popup-header">
       <div class="logo">
-        <svg class="chrome-logo" viewBox="0 0 48 48" width="24" height="24" fill="none">
+        <svg class="chrome-logo" viewBox="0 0 48 48" width="24" height="24" fill="none" aria-hidden="true">
           <circle cx="24" cy="24" r="23" fill="#ffffff" stroke="#e0e3e7" stroke-width="0.5"/>
           <path d="M24 4.5C15.8 4.5 8.7 9.4 5.5 16.5L16.2 35.1C18.4 36.6 21.1 37.5 24 37.5C31.5 37.5 37.5 31.5 37.5 24C37.5 23.3 37.4 22.7 37.3 22H24V4.5Z" fill="#ea4335"/>
           <path d="M43.5 24C43.5 18.5 41.3 13.5 37.8 9.9L24 33.8H12.3L22.9 43.1C23.3 43.1 23.6 43.2 24 43.2C34.8 43.2 43.5 34.5 43.5 24Z" fill="#fbbc04"/>
@@ -19,22 +20,26 @@
           <circle cx="24" cy="24" r="7.5" fill="#1a73e8"/>
         </svg>
         <div>
-          <h2>Serendipity Drift</h2>
+          <h1>Serendipity Drift</h1>
           <p>Chrome Built-in AI 온디바이스 검색</p>
         </div>
       </div>
     </header>
 
-    <div class="status-card" id="status-card">
+    <section class="status-card" aria-live="polite">
       <div class="status-indicator">
-        <span class="status-dot" id="status-dot"></span>
+        <span class="status-dot" id="status-dot" aria-hidden="true"></span>
         <span class="status-title" id="status-title">AI 모델 점검 중...</span>
       </div>
       <p class="status-desc" id="status-desc">브라우저 내장 Gemini Nano 가용성을 확인하고 있습니다.</p>
-    </div>
+      <progress id="download-progress" class="download-progress" max="1" hidden></progress>
+      <button type="button" id="download-btn" class="action-btn action-secondary" hidden>
+        ⬇️ Gemini Nano 모델 다운로드
+      </button>
+    </section>
 
     <div class="quick-actions">
-      <button id="open-panel-btn" class="action-btn action-primary">
+      <button type="button" id="open-panel-btn" class="action-btn action-primary">
         📖 사이드패널 열기
       </button>
     </div>
@@ -48,7 +53,7 @@
     </label>
 
     <section class="usage-guide">
-      <h4>⚡ 주요 사용법</h4>
+      <h2>⚡ 주요 사용법</h2>
       <ul class="guide-list">
         <li>
           <strong>1. 크롬 주소창</strong>
@@ -56,7 +61,7 @@
         </li>
         <li>
           <strong>2. 구글 검색창</strong>
-          <span>구글 검색 시 상단에 크롬 공식 스타일 4단계 카드가 나타납니다.</span>
+          <span>구글 검색 시 결과 상단에 4단계 비틀린 검색어 카드가 나타납니다.</span>
         </li>
         <li>
           <strong>3. 사유의 가지치기</strong>
@@ -66,7 +71,7 @@
     </section>
 
     <footer class="popup-footer">
-      <a href="#" id="flags-guide-link">⚙️ Gemini Nano 활성화 가이드</a>
+      <button type="button" id="flags-guide-link" class="link-btn">⚙️ Gemini Nano 활성화 가이드</button>
     </footer>
   </div>
 

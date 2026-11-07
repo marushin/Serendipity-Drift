@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
   <title>Serendipity Drift</title>
   <link rel="stylesheet" href="sidepanel.css">
 </head>
@@ -11,8 +12,7 @@
     <!-- Header -->
     <header class="app-header">
       <div class="logo-group">
-        <!-- Google Chrome 4-color Brand Icon -->
-        <svg class="chrome-logo" viewBox="0 0 48 48" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="chrome-logo" viewBox="0 0 48 48" width="28" height="28" fill="none" aria-hidden="true">
           <circle cx="24" cy="24" r="23" fill="#ffffff" stroke="#e0e3e7" stroke-width="0.5"/>
           <path d="M24 4.5C15.8 4.5 8.7 9.4 5.5 16.5L16.2 35.1C18.4 36.6 21.1 37.5 24 37.5C31.5 37.5 37.5 31.5 37.5 24C37.5 23.3 37.4 22.7 37.3 22H24V4.5Z" fill="#ea4335"/>
           <path d="M43.5 24C43.5 18.5 41.3 13.5 37.8 9.9L24 33.8H12.3L22.9 43.1C23.3 43.1 23.6 43.2 24 43.2C34.8 43.2 43.5 34.5 43.5 24Z" fill="#fbbc04"/>
@@ -25,32 +25,33 @@
           <p class="logo-sub">Chrome Built-in AI · 사유 탈선 탐색기</p>
         </div>
       </div>
-      <div id="ai-status-pill" class="status-pill status-checking" title="Gemini Nano 모델 상태 (클릭 시 활성화)">
-        <span class="status-dot"></span>
+      <button type="button" id="ai-status-pill" class="status-pill" title="Gemini Nano 모델 상태">
+        <span class="status-dot" aria-hidden="true"></span>
         <span class="status-text">모델 확인 중</span>
-      </div>
+      </button>
     </header>
 
     <!-- Exploration Breadcrumbs -->
-    <div id="history-trail" class="history-trail" style="display: none;">
+    <nav id="history-trail" class="history-trail" aria-label="사유의 궤적" hidden>
       <span class="trail-label">사유의 궤적:</span>
       <div id="trail-items" class="trail-items"></div>
-    </div>
+    </nav>
 
     <!-- Search & Control Panel -->
-    <section class="control-panel">
+    <section class="control-panel" aria-label="검색 설정">
       <div class="search-input-wrapper">
-        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="#5f6368">
+        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
           <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
         </svg>
-        <input 
-          type="text" 
-          id="query-input" 
-          class="query-input" 
+        <input
+          type="text"
+          id="query-input"
+          class="query-input"
           placeholder="검색어를 입력하거나 탭에서 가져오세요..."
+          aria-label="검색어"
           autocomplete="off"
         />
-        <button id="sync-tab-btn" class="icon-btn" title="현재 활성 탭의 검색어 가져오기">
+        <button type="button" id="sync-tab-btn" class="icon-btn" title="현재 탭의 검색어 가져오기" aria-label="현재 탭의 검색어 가져오기">
           🔄
         </button>
       </div>
@@ -62,52 +63,61 @@
             <!-- 기본 '관련 카테고리 내 변환' 및 20개 사유 벡터가 JS로 로드됩니다 -->
           </select>
         </div>
-        <button id="random-vector-btn" class="icon-btn" title="사유 벡터 무작위 셔플">
+        <button type="button" id="random-vector-btn" class="icon-btn" title="사유 벡터 무작위 셔플" aria-label="사유 벡터 무작위 셔플">
           🎲
         </button>
       </div>
 
       <div class="action-row">
-        <button id="run-drift-btn" class="btn btn-primary">
-          <span class="btn-icon">⚡</span>
+        <button type="button" id="run-drift-btn" class="btn btn-primary">
+          <span class="btn-icon" aria-hidden="true">⚡</span>
           <span class="btn-label">의도 비틀어 탐색하기</span>
         </button>
       </div>
     </section>
 
     <!-- Vector Information Banner -->
-    <div id="active-vector-banner" class="active-vector-banner" style="display: none;">
-      <div class="vector-badge" id="banner-vector-title">🗂️ 관련 카테고리 내 변환 (기본)</div>
-      <p class="vector-prompt" id="banner-vector-prompt">"주제어를 관련 카테고리내에서 바꿔라"</p>
+    <div id="active-vector-banner" class="active-vector-banner" hidden>
+      <div class="vector-badge" id="banner-vector-title"></div>
+      <p class="vector-prompt" id="banner-vector-prompt"></p>
     </div>
 
-    <!-- Action Legend Bar (상단 기능 가이드) -->
-    <div id="dock-legend-bar" class="dock-legend-bar" style="display: none;">
-      <span class="legend-item" title="크롬 새 탭으로 구글 검색창 열기"><span class="legend-icon">🔍</span> 크롬 검색</span>
-      <span class="legend-dot">•</span>
-      <span class="legend-item" title="이 단어를 새 검색어로 삼아 계속 도약"><span class="legend-icon">🌱</span> 이 조각으로 도약</span>
-      <span class="legend-dot">•</span>
-      <span class="legend-item" title="문장을 잘게 쪼개어 세부 단어 조각 도출"><span class="legend-icon">✂️</span> 구절 분해</span>
+    <!-- Action Legend Bar -->
+    <div id="dock-legend-bar" class="dock-legend-bar" hidden>
+      <span class="legend-item"><span class="legend-icon" aria-hidden="true">🔍</span> 크롬 검색</span>
+      <span class="legend-dot" aria-hidden="true">•</span>
+      <span class="legend-item"><span class="legend-icon" aria-hidden="true">🌱</span> 이 조각으로 도약</span>
+      <span class="legend-dot" aria-hidden="true">•</span>
+      <span class="legend-item"><span class="legend-icon" aria-hidden="true">✂️</span> 구절 분해</span>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="error-state" role="alert" hidden>
+      <span aria-hidden="true">⚠️</span>
+      <div>
+        <strong>비틀기에 실패했습니다</strong>
+        <span id="error-message"></span>
+      </div>
     </div>
 
     <!-- Loading State -->
-    <div id="loading-state" class="loading-state" style="display: none;">
-      <div class="chrome-spinner"></div>
-      <p id="loading-message" class="loading-text">Gemini Nano가 사유의 틈새를 직조하는 중...</p>
+    <div id="loading-state" class="loading-state" role="status" hidden>
+      <div class="chrome-spinner" aria-hidden="true"></div>
+      <p id="loading-message" class="loading-text">사유의 틈새를 직조하는 중...</p>
     </div>
 
     <!-- Empty State -->
     <div id="empty-state" class="empty-state">
-      <div class="empty-icon-wrapper">
+      <div class="empty-icon-wrapper" aria-hidden="true">
         <svg viewBox="0 0 48 48" width="56" height="56" fill="none">
-          <circle cx="24" cy="24" r="20" fill="#f1f3f4"/>
+          <circle class="empty-icon-bg" cx="24" cy="24" r="20"/>
           <path d="M16 24C16 19.58 19.58 16 24 16C28.42 16 32 19.58 32 24C32 28.42 28.42 32 24 32" stroke="#1a73e8" stroke-width="3" stroke-linecap="round"/>
           <circle cx="24" cy="24" r="4" fill="#ea4335"/>
           <circle cx="34" cy="18" r="2.5" fill="#fbbc04"/>
           <circle cx="14" cy="30" r="2.5" fill="#34a853"/>
         </svg>
       </div>
-      <h3>의도에서 조금 벗어난 탐색</h3>
+      <h2 class="empty-title">의도에서 조금 벗어난 탐색</h2>
       <p>원하는 단어를 검색하면 Chrome 내장 AI가 1단계부터 4단계까지 점진적으로 확장된 도약 검색어를 생성합니다.</p>
       <div class="empty-tips">
         <span class="tip-badge">Tip</span> 주소창에 <code>drift 검색어</code>를 입력해도 즉시 탐색됩니다!
@@ -115,15 +125,13 @@
     </div>
 
     <!-- Card Stack Container -->
-    <main id="card-stack" class="card-stack" style="display: none;">
-      <!-- 크롬 사이트 스타일 4단계 카드들이 동적으로 렌더링됩니다 -->
-    </main>
+    <main id="card-stack" class="card-stack" aria-label="비틀린 검색어 4단계" hidden></main>
 
-    <!-- Footer Guide -->
+    <!-- Footer -->
     <footer class="app-footer">
       <div class="footer-links">
-        <a href="#" id="open-flags-guide" class="footer-link">⚙️ Gemini Nano 설정 가이드</a>
-        <a href="#" id="clear-trail-btn" class="footer-link">🗑️ 궤적 초기화</a>
+        <button type="button" id="open-flags-guide" class="footer-link">⚙️ Gemini Nano 설정 가이드</button>
+        <button type="button" id="clear-trail-btn" class="footer-link">🗑️ 궤적 초기화</button>
       </div>
     </footer>
   </div>

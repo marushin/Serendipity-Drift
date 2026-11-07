@@ -57,6 +57,7 @@ chrome_extension/
 - **모델 다운로드**: `LanguageModel.create()`는 모델이 없을 때 사용자 클릭(user activation)이 필요하므로, 팝업·사이드패널이 클릭 핸들러에서 `nanoEngine.activateModel()`을 직접 호출합니다.
 - **세션**: 시스템 프롬프트별 베이스 세션을 캐시하고 요청마다 `clone()` 한 1회용 세션을 사용·파기합니다.
 - **캐시**: Gemini Nano 결과만 메모리 LRU(60개)에 보관하며, 폴백 결과는 캐시하지 않습니다. 탐색 기록은 저장하지 않습니다.
+- **테마**: 모든 색은 CSS 토큰으로만 정의하고 다크 모드는 토큰만 덮어씁니다. 배경용(`*-fill`)과 글자용(`*-text`) 색을 분리해 대비(WCAG AA)를 보장합니다. 구글 페이지 위젯은 OS 설정이 아니라 **구글 페이지 자체의 테마**를 따릅니다.
 - **권한**: `sidePanel`, `storage`, `tabs`, `offscreen`만 사용하며, 콘텐츠 스크립트는 `www.google.com` / `www.google.co.kr`의 홈·검색 페이지에만 주입됩니다.
 
 ## 🧪 개발

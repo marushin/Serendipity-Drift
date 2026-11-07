@@ -7,28 +7,42 @@ let trailHistory = [];
 let driftToken = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const queryInput = document.getElementById('query-input');
-  const syncTabBtn = document.getElementById('sync-tab-btn');
-  const vectorSelect = document.getElementById('vector-select');
-  const randomVectorBtn = document.getElementById('random-vector-btn');
-  const runDriftBtn = document.getElementById('run-drift-btn');
-  const aiStatusPill = document.getElementById('ai-status-pill');
+  const $ = (id) => document.getElementById(id);
+  const queryInput = $('query-input');
+  const syncTabBtn = $('sync-tab-btn');
+  const vectorSelect = $('vector-select');
+  const randomVectorBtn = $('random-vector-btn');
+  const runDriftBtn = $('run-drift-btn');
+  const aiStatusPill = $('ai-status-pill');
   const aiStatusText = aiStatusPill.querySelector('.status-text');
-  const activeVectorBanner = document.getElementById('active-vector-banner');
-  const dockLegendBar = document.getElementById('dock-legend-bar');
-  const bannerVectorTitle = document.getElementById('banner-vector-title');
-  const bannerVectorPrompt = document.getElementById('banner-vector-prompt');
-  const loadingState = document.getElementById('loading-state');
-  const emptyState = document.getElementById('empty-state');
-  const cardStack = document.getElementById('card-stack');
-  const historyTrail = document.getElementById('history-trail');
-  const trailItems = document.getElementById('trail-items');
-  const clearTrailBtn = document.getElementById('clear-trail-btn');
-  const openFlagsGuide = document.getElementById('open-flags-guide');
+  const activeVectorBanner = $('active-vector-banner');
+  const dockLegendBar = $('dock-legend-bar');
+  const bannerVectorTitle = $('banner-vector-title');
+  const bannerVectorPrompt = $('banner-vector-prompt');
+  const loadingState = $('loading-state');
+  const loadingMessage = $('loading-message');
+  const emptyState = $('empty-state');
+  const errorState = $('error-state');
+  const errorMessage = $('error-message');
+  const cardStack = $('card-stack');
+  const historyTrail = $('history-trail');
+  const trailItems = $('trail-items');
+  const clearTrailBtn = $('clear-trail-btn');
+  const openFlagsGuide = $('open-flags-guide');
 
   const myWindowId = (await chrome.windows.getCurrent()).id;
 
-  // 1. 사유 벡터 옵션 채우기
+  /** 화면 상태 전환: 'empty' | 'loading' | 'result' | 'error' */
+  function showView(view) {
+    emptyState.hidden = view !== 'empty';
+    loadingState.hidden = view !== 'loading';
+    errorState.hidden = view !== 'error';
+    cardStack.hidden = view !== 'result';
+    activeVectorBanner.hidden = view !== 'result';
+    dockLegendBar.hidden = view !== 'result';
+  }
+
+  // 1. 사유 벡터 옵션
   for (const d of DRIFT_VECTORS) {
     vectorSelect.appendChild(new Option(`${d.icon} ${d.title}`, d.id));
   }
@@ -38,9 +52,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 2. Gemini Nano 상태
   let modelStatus = 'unknown';
 
-  function setPill(cls, text) {
+  function setPill(cls, text, title) {
     aiStatusPill.className = `status-pill ${cls}`;
     aiStatusText.textContent = text;
+    aiStatusPill.title = title;
+    aiStatusPill.setAttribute('aria-label', `${text}. ${title}`);
   }
 
   async function checkModelStatus() {
@@ -52,39 +68,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (modelStatus === 'ready') {
-      setPill('status-ready', 'Gemini Nano 준비됨');
-      aiStatusPill.title = 'Gemini Nano 온디바이스 모델 사용 중';
+      setPill('status-ready', 'Gemini Nano 준비됨', 'Gemini Nano 온디바이스 모델 사용 중');
     } else if (modelStatus === 'downloading') {
-      setPill('status-downloading', '모델 받기 (클릭)');
-      aiStatusPill.title = '클릭하면 Gemini Nano 모델 다운로드를 시작합니다';
+      setPill('status-downloading', '모델 받기', '클릭하면 Gemini Nano 모델 다운로드를 시작합니다');
     } else {
-      setPill('status-fallback', '내장 연상 모드');
-      aiStatusPill.title = 'Prompt API를 사용할 수 없어 내장 연상 키워드로 동작합니다. 설정 가이드를 확인하세요.';
+      setPill('status-fallback', '내장 연상 모드', 'Prompt API를 사용할 수 없어 내장 연상 키워드로 동작합니다. 클릭하면 설정 가이드를 엽니다.');
     }
   }
 
   checkModelStatus();
-  aiStatusPill.style.cursor = 'pointer';
 
-  // 상태 배지 클릭 → 모델 다운로드/활성화.
-  // LanguageModel.create() 는 사용자 활성화가 필요하므로 이 페이지에서 직접 호출합니다.
+  // 상태 배지 클릭 → 모델 다운로드 (사용자 활성화가 필요하므로 이 페이지에서 직접 호출)
   aiStatusPill.addEventListener('click', async () => {
-    if (modelStatus === 'ready') return;
+    if (modelStatus === 'ready' || modelStatus === 'activating') return;
     if (modelStatus !== 'downloading') {
-      chrome.tabs.create({ url: chrome.runtime.getURL('guide.html') });
+      openGuide();
       return;
     }
 
-    setPill('status-downloading', '모델 준비 중...');
+    modelStatus = 'activating';
+    setPill('status-downloading', '모델 준비 중...', 'Gemini Nano 모델을 내려받고 있습니다');
     const res = await nanoEngine.activateModel((loaded, total) => {
-      const ratio = total ? loaded / total : loaded; // 신형 API 는 0~1 비율을 보고
-      aiStatusText.textContent = `모델 다운로드 ${Math.round(ratio * 100)}%`;
+      const ratio = total ? loaded / total : loaded; // 신형 API 는 0~1 비율
+      aiStatusText.textContent = `다운로드 ${Math.round(ratio * 100)}%`;
     });
     await chrome.runtime.sendMessage({ type: 'AI_STATUS_CHANGED' }).catch(() => {});
+    await checkModelStatus();
     if (!res.success) {
       aiStatusPill.title = `활성화 실패: ${res.error}`;
     }
-    checkModelStatus();
   });
 
   // 3. 현재 창의 활성 탭 검색어 동기화
@@ -140,11 +152,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function executeDrift(query, vectorId, { fresh = false } = {}) {
     const token = ++driftToken;
 
-    emptyState.style.display = 'none';
-    cardStack.style.display = 'none';
-    activeVectorBanner.style.display = 'none';
-    if (dockLegendBar) dockLegendBar.style.display = 'none';
-    loadingState.style.display = 'flex';
+    loadingMessage.textContent = modelStatus === 'ready'
+      ? 'Gemini Nano가 사유의 틈새를 직조하는 중...'
+      : '내장 연상 키워드로 궤적을 엮는 중...';
+    showView('loading');
     runDriftBtn.disabled = true;
 
     let response;
@@ -160,20 +171,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 더 최근 요청이 있으면 이 응답은 무시 (로딩 상태도 최신 요청이 정리)
     if (token !== driftToken) return;
 
-    loadingState.style.display = 'none';
     runDriftBtn.disabled = false;
 
     if (!response?.success || !response.data) {
-      emptyState.style.display = 'flex';
-      alert(`오류: ${response?.error || '비틀기 응답 실패'}`);
+      errorMessage.textContent = response?.error || '응답을 받지 못했습니다. 잠시 후 다시 시도해 주세요.';
+      showView('error');
       return;
     }
 
     renderDriftResult(response.data);
+    showView('result');
     updateTrail(query);
   }
 
-  // 7. 4단계 카드 스택 렌더링
+  // 7. 4단계 카드 스택
   function renderDriftResult(drift) {
     const dir = drift.direction;
     bannerVectorTitle.textContent = `${dir.icon || '🧭'} ${dir.title}`;
@@ -187,21 +198,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeVectorBanner.appendChild(note);
     }
 
-    activeVectorBanner.style.display = 'block';
-    if (dockLegendBar) dockLegendBar.style.display = 'flex';
-
-    cardStack.replaceChildren();
-    cardStack.style.display = 'flex';
-
-    for (const item of drift.queries || []) {
-      cardStack.appendChild(createCard(item));
-    }
+    cardStack.replaceChildren(...(drift.queries || []).map(createCard));
   }
 
   function createCard(item) {
     const rank = item.rank || 1;
     const card = document.createElement('article');
-    card.className = `drift-card step-card step-${rank}`;
+    card.className = `drift-card step-${rank}`;
 
     card.innerHTML = `
       <div class="card-hero">
@@ -213,18 +216,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         <p class="card-desc">${escapeHtml(item.explanation)}</p>
       </div>
       <div class="card-tray">
-        <div class="card-actions icon-only-actions">
-          <button class="btn-dock btn-dock-primary search-chrome-btn" title="크롬 검색창으로 검색" aria-label="크롬 검색창으로 검색">
-            <span class="dock-icon">🔍</span>
+        <div class="card-actions">
+          <button type="button" class="btn-dock btn-dock-primary search-chrome-btn" title="크롬 검색창으로 검색" aria-label="'${escapeHtml(item.query)}' 구글에서 검색">
+            <span class="dock-icon" aria-hidden="true">🔍</span>
           </button>
-          <button class="btn-dock btn-dock-secondary branch-btn" title="이 조각으로 도약" aria-label="이 조각으로 도약">
-            <span class="dock-icon">🌱</span>
+          <button type="button" class="btn-dock branch-btn" title="이 조각으로 도약" aria-label="'${escapeHtml(item.query)}'(으)로 도약">
+            <span class="dock-icon" aria-hidden="true">🌱</span>
           </button>
-          <button class="btn-dock btn-dock-subtle deconstruct-btn" title="구절 분해" aria-label="구절 분해">
-            <span class="dock-icon">✂️</span>
+          <button type="button" class="btn-dock deconstruct-btn" title="구절 분해" aria-label="설명 구절 분해" aria-expanded="false">
+            <span class="dock-icon" aria-hidden="true">✂️</span>
           </button>
         </div>
-        <div class="phrase-drawer" style="display: none;"></div>
+        <div class="phrase-drawer" hidden></div>
       </div>
     `;
 
@@ -237,18 +240,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       executeDrift(item.query, vectorSelect.value || DEFAULT_VECTOR_ID);
     });
 
+    const deconstructBtn = card.querySelector('.deconstruct-btn');
     const phraseDrawer = card.querySelector('.phrase-drawer');
     let phraseToken = 0;
 
-    card.querySelector('.deconstruct-btn').addEventListener('click', async () => {
-      if (phraseDrawer.style.display === 'flex') {
-        phraseDrawer.style.display = 'none';
+    const setDrawerOpen = (open) => {
+      phraseDrawer.hidden = !open;
+      deconstructBtn.setAttribute('aria-expanded', String(open));
+    };
+
+    deconstructBtn.addEventListener('click', async () => {
+      if (!phraseDrawer.hidden) {
+        setDrawerOpen(false);
         phraseToken++;
         return;
       }
 
       const token = ++phraseToken;
-      phraseDrawer.style.display = 'flex';
+      setDrawerOpen(true);
       setPhraseMessage('✂️ 문장을 조각내는 중...');
 
       try {
@@ -261,7 +270,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
         phraseDrawer.replaceChildren(...phrases.map((phrase) => {
-          const pill = document.createElement('span');
+          const pill = document.createElement('button');
+          pill.type = 'button';
           pill.className = 'phrase-pill';
           pill.textContent = phrase;
           pill.title = `"${phrase}"(으)로 사유 도약하기`;
@@ -279,6 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function setPhraseMessage(text) {
       const span = document.createElement('span');
       span.className = 'phrase-loading';
+      span.setAttribute('role', 'status');
       span.textContent = text;
       phraseDrawer.replaceChildren(span);
     }
@@ -286,23 +297,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     return card;
   }
 
-  // 8. 탐색 궤적(Breadcrumb) — 패널이 열려 있는 동안만 메모리에 유지
+  // 8. 탐색 궤적 — 패널이 열려 있는 동안만 메모리에 유지
   function updateTrail(query) {
     if (!trailHistory.includes(query)) trailHistory.push(query);
     renderTrail();
   }
 
   function renderTrail() {
-    if (trailHistory.length <= 1) {
-      historyTrail.style.display = 'none';
-      return;
-    }
+    historyTrail.hidden = trailHistory.length <= 1;
+    if (historyTrail.hidden) return;
 
-    historyTrail.style.display = 'flex';
     trailItems.replaceChildren();
-
     trailHistory.forEach((q, idx) => {
-      const node = document.createElement('span');
+      const node = document.createElement('button');
+      node.type = 'button';
       node.className = 'trail-node';
       node.textContent = q;
       node.title = `이 사유 지점으로 돌아가기: ${q}`;
@@ -315,21 +323,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (idx < trailHistory.length - 1) {
         const arrow = document.createElement('span');
         arrow.className = 'trail-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
         arrow.textContent = '➔';
         trailItems.appendChild(arrow);
       }
     });
   }
 
-  clearTrailBtn.addEventListener('click', (e) => {
-    e.preventDefault();
+  clearTrailBtn.addEventListener('click', () => {
     trailHistory = [];
     renderTrail();
   });
 
   // 9. 가이드 페이지
-  openFlagsGuide.addEventListener('click', (e) => {
-    e.preventDefault();
+  function openGuide() {
     chrome.tabs.create({ url: chrome.runtime.getURL('guide.html') });
-  });
+  }
+  openFlagsGuide.addEventListener('click', openGuide);
 });

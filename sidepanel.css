@@ -1,74 +1,100 @@
-/* Google Chrome Official Website Design System */
+/* ==========================================================================
+   Serendipity Drift — 사이드패널
+   규칙: 모든 색은 :root 토큰으로만 쓰고, 다크 모드는 토큰만 덮어씁니다.
+   - *-fill   : 글자를 올리는 "배경"용 색
+   - *-text   : 페이지 배경 위에 쓰는 "글자"용 색
+   둘을 섞어 쓰지 않습니다 (다크 모드 대비 문제의 원인이었음).
+   ========================================================================== */
 
 :root {
+  color-scheme: light dark;
   --font-family: "Google Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  
-  /* Google Neutral Palette (Light) */
+
+  /* 표면 */
   --bg-page: #f8fafd;
   --bg-surface: #ffffff;
-  --bg-surface-elevated: #ffffff;
-  --bg-dock: #ffffff;
-  --bg-dock-btn: #f8f9fa;
-  --bg-pill: #f1f3f4;
+  --bg-field: #f1f3f4;
+  --bg-field-focus: #ffffff;
+  --bg-hover: #e8eaed;
+  --bg-tinted: #e8f0fe;
+  --bg-tinted-hover: #d2e3fc;
+
+  /* 글자 */
   --text-primary: #1f1f1f;
   --text-secondary: #444746;
   --text-muted: #5f6368;
+
+  /* 테두리 */
   --border-subtle: #e0e3e7;
   --border-default: #dadce0;
-  
-  /* Google Chrome Brand 4 Colors */
-  --chrome-blue: #0b57d0;
-  --chrome-blue-hover: #0842a0;
-  --chrome-blue-tray: #d3e3fd;
-  
-  --chrome-yellow: #f9ab00;
-  --chrome-yellow-tray: #feefc3;
-  
-  --chrome-green: #a8dab5;
-  --chrome-green-tray: #ceead6;
-  --chrome-green-dark: #137333;
-  
-  --chrome-red: #f28b82;
-  --chrome-red-tray: #fad2cf;
-  --chrome-red-dark: #c5221f;
 
-  /* Geometry */
-  --radius-card: 28px;
-  --radius-dock: 16px;
+  /* 강조 */
+  --accent-text: #0b57d0;
+  --accent-fill: #0b57d0;
+  --accent-fill-hover: #0842a0;
+  --on-accent: #ffffff;
+  --focus-ring: #0b57d0;
+
+  /* 상태 */
+  --ok-bg: #e6f4ea;   --ok-fg: #137333;   --ok-border: #a8dab5;   --ok-dot: #1e8e3e;
+  --warn-bg: #fef7e0; --warn-fg: #8a5300; --warn-border: #f9dc8c; --warn-dot: #f9ab00;
+  --info-bg: #e8f0fe; --info-fg: #0b57d0; --info-border: #aecbfa;
+  --error-bg: #fce8e6; --error-fg: #a50e0e; --error-border: #f6aea9;
+  --idle-bg: #f1f3f4;  --idle-dot: #747775;
+  --disabled-bg: #dadce0; --disabled-fg: #5f6368;
+
+  /* 카드 하단 아이콘 버튼 */
+  --dock-btn-bg: #ffffff;
+  --dock-btn-border: rgba(0, 0, 0, 0.08);
+  --dock-btn-fg: #1f1f1f;
+
+  /* 그림자 */
+  --shadow-sm: 0 1px 3px rgba(60, 64, 67, 0.1);
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 6px 18px rgba(0, 0, 0, 0.1);
+
+  /* 형태 */
   --radius-pill: 24px;
   --radius-sm: 8px;
 }
 
-/* 브라우저 테마(다크 모드)에 따른 자동 색상 전환 */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-page: #1a1a1c;
     --bg-surface: #252629;
-    --bg-surface-elevated: #2d2e31;
-    --bg-dock: #202124;
-    --bg-dock-btn: #2d2e31;
-    --bg-pill: #2d2e31;
+    --bg-field: #2d2e31;
+    --bg-field-focus: #202124;
+    --bg-hover: #3c4043;
+    --bg-tinted: #1c2b45;
+    --bg-tinted-hover: #24385a;
+
     --text-primary: #e8eaed;
     --text-secondary: #bdc1c6;
     --text-muted: #9aa0a6;
+
     --border-subtle: #3c4043;
     --border-default: #5f6368;
-    
-    /* Google Chrome Brand 4 Colors (Dark Tuned) */
-    --chrome-blue: #174ea6;
-    --chrome-blue-hover: #1967d2;
-    --chrome-blue-tray: #0f1f33;
-    
-    --chrome-yellow: #a35d00;
-    --chrome-yellow-tray: #2d1c07;
-    
-    --chrome-green: #137333;
-    --chrome-green-tray: #0f2416;
-    --chrome-green-dark: #81c995;
-    
-    --chrome-red: #c5221f;
-    --chrome-red-tray: #2d0f0f;
-    --chrome-red-dark: #f28b82;
+
+    --accent-text: #8ab4f8;
+    --accent-fill: #8ab4f8;
+    --accent-fill-hover: #aecbfa;
+    --on-accent: #202124;
+    --focus-ring: #8ab4f8;
+
+    --ok-bg: #0f2416;   --ok-fg: #81c995;   --ok-border: #1d4d2b;   --ok-dot: #81c995;
+    --warn-bg: #3b2f12; --warn-fg: #fdd663; --warn-border: #6b5420; --warn-dot: #fdd663;
+    --info-bg: #1c2b45; --info-fg: #8ab4f8; --info-border: #2d4a7a;
+    --error-bg: #3b1513; --error-fg: #f6aea9; --error-border: #6b2420;
+    --idle-bg: #2d2e31;  --idle-dot: #9aa0a6;
+    --disabled-bg: #3c4043; --disabled-fg: #9aa0a6;
+
+    --dock-btn-bg: rgba(255, 255, 255, 0.12);
+    --dock-btn-border: rgba(255, 255, 255, 0.16);
+    --dock-btn-fg: #e8eaed;
+
+    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.35);
+    --shadow-card-hover: 0 6px 18px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -88,6 +114,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
 .app-layout {
   display: flex;
   flex-direction: column;
@@ -97,12 +137,13 @@ body {
 }
 
 /* ==========================================================================
-   Header (Google Chrome Style)
+   헤더
    ========================================================================== */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border-subtle);
 }
@@ -111,6 +152,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .chrome-logo {
@@ -121,6 +163,7 @@ body {
 .logo-text {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .logo-title {
@@ -135,58 +178,54 @@ body {
   color: var(--text-muted);
 }
 
-/* Status Pill (Google Material 3 Chip) */
+/* 상태 배지 (button) */
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
   padding: 4px 10px;
   border-radius: 100px;
   font-size: 11px;
   font-weight: 600;
-  background: #f1f3f4;
+  background: var(--idle-bg);
   border: 1px solid var(--border-default);
   color: var(--text-secondary);
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .status-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: #747775;
+  background-color: var(--idle-dot);
 }
 
 .status-ready {
-  background: #e6f4ea;
-  border-color: #a8dab5;
-  color: #137333;
+  background: var(--ok-bg);
+  border-color: var(--ok-border);
+  color: var(--ok-fg);
+  cursor: default;
 }
-.status-ready .status-dot {
-  background-color: #1e8e3e;
-  box-shadow: 0 0 4px #1e8e3e;
-}
+.status-ready .status-dot { background-color: var(--ok-dot); }
 
 .status-downloading {
-  background: #fef7e0;
-  border-color: #fdd663;
-  color: #b06000;
+  background: var(--warn-bg);
+  border-color: var(--warn-border);
+  color: var(--warn-fg);
 }
-.status-downloading .status-dot {
-  background-color: #f9ab00;
-}
+.status-downloading .status-dot { background-color: var(--warn-dot); }
 
 .status-fallback {
-  background: #e8f0fe;
-  border-color: #aecbfa;
-  color: #1a73e8;
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-fg);
 }
-.status-fallback .status-dot {
-  background-color: #1a73e8;
-}
+.status-fallback .status-dot { background-color: var(--info-fg); }
 
 /* ==========================================================================
-   History Trail (Material Breadcrumbs)
+   사유의 궤적 (Breadcrumbs)
    ========================================================================== */
 .history-trail {
   display: flex;
@@ -198,7 +237,7 @@ body {
   border: 1px solid var(--border-subtle);
   overflow-x: auto;
   white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .trail-label {
@@ -216,16 +255,17 @@ body {
 .trail-node {
   font-size: 11px;
   font-weight: 600;
-  color: var(--chrome-blue);
-  cursor: pointer;
-  background: #e8f0fe;
+  color: var(--accent-text);
+  background: var(--bg-tinted);
+  border: none;
   padding: 3px 8px;
   border-radius: 12px;
-  transition: all 0.15s ease;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .trail-node:hover {
-  background: #d2e3fc;
+  background: var(--bg-tinted-hover);
   text-decoration: underline;
 }
 
@@ -235,7 +275,7 @@ body {
 }
 
 /* ==========================================================================
-   Control Panel (Google Search Bar Style)
+   검색 & 컨트롤
    ========================================================================== */
 .control-panel {
   display: flex;
@@ -245,32 +285,35 @@ body {
   padding: 14px;
   border-radius: 20px;
   border: 1px solid var(--border-subtle);
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .search-input-wrapper {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f8f9fa;
+  background: var(--bg-field);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-pill);
   padding: 2px 8px 2px 14px;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* 입력창 자체 대신 감싼 상자에 포커스 링을 표시 */
 .search-input-wrapper:focus-within {
-  background: #ffffff;
-  border-color: var(--chrome-blue);
-  box-shadow: 0 1px 6px rgba(11, 87, 208, 0.2);
+  background: var(--bg-field-focus);
+  border-color: var(--accent-text);
+  box-shadow: 0 0 0 1px var(--accent-text);
 }
 
 .search-icon {
   flex-shrink: 0;
+  fill: var(--text-muted);
 }
 
 .query-input {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   height: 40px;
@@ -280,6 +323,10 @@ body {
   outline: none;
 }
 
+.query-input::placeholder {
+  color: var(--text-muted);
+}
+
 .icon-btn {
   background: transparent;
   border: none;
@@ -287,16 +334,17 @@ body {
   border-radius: 50%;
   width: 32px;
   height: 32px;
+  flex-shrink: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .icon-btn:hover {
-  background: #e8eaed;
+  background: var(--bg-hover);
 }
 
 .vector-selector-row {
@@ -314,25 +362,25 @@ body {
 
 .select-wrapper {
   flex: 1;
+  min-width: 0;
 }
 
 .vector-select {
   width: 100%;
-  background: #f8f9fa;
+  background: var(--bg-field);
   border: 1px solid var(--border-default);
   border-radius: 16px;
   padding: 7px 12px;
   color: var(--text-primary);
   font-size: 12px;
   font-family: inherit;
-  outline: none;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .vector-select:focus {
-  border-color: var(--chrome-blue);
-  background: #ffffff;
+  border-color: var(--accent-text);
+  background: var(--bg-field-focus);
 }
 
 .action-row {
@@ -346,37 +394,37 @@ body {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   border: none;
-  font-family: inherit;
 }
 
 .btn-primary {
-  background: var(--chrome-blue);
-  color: #ffffff;
-  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.3);
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background: var(--chrome-blue-hover);
-  box-shadow: 0 2px 6px rgba(11, 87, 208, 0.4);
+  background: var(--accent-fill-hover);
 }
 
 .btn-primary:disabled {
-  background: #dadce0;
-  color: #80868b;
+  background: var(--disabled-bg);
+  color: var(--disabled-fg);
   cursor: not-allowed;
   box-shadow: none;
 }
 
-/* Active Vector Banner */
+/* ==========================================================================
+   현재 벡터 배너 & 안내
+   ========================================================================== */
 .active-vector-banner {
-  background: #e8f0fe;
-  border-left: 4px solid var(--chrome-blue);
+  background: var(--bg-tinted);
+  border-left: 4px solid var(--accent-text);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   padding: 10px 14px;
 }
@@ -384,7 +432,7 @@ body {
 .vector-badge {
   font-size: 12px;
   font-weight: 700;
-  color: var(--chrome-blue);
+  color: var(--accent-text);
   margin-bottom: 2px;
 }
 
@@ -394,7 +442,17 @@ body {
   line-height: 1.4;
 }
 
-/* Action Legend Bar (상단 기능 가이드) */
+.fallback-note {
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--warn-fg);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
 .dock-legend-bar {
   display: flex;
   align-items: center;
@@ -406,7 +464,7 @@ body {
   border-radius: var(--radius-pill);
   font-size: 11.5px;
   color: var(--text-secondary);
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.06);
+  box-shadow: var(--shadow-sm);
   flex-wrap: wrap;
 }
 
@@ -428,9 +486,10 @@ body {
 }
 
 /* ==========================================================================
-   Loading & Empty States
+   로딩 / 빈 상태 / 오류
    ========================================================================== */
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -440,7 +499,6 @@ body {
   gap: 12px;
 }
 
-/* Chrome 4-Color Spinner */
 .chrome-spinner {
   width: 38px;
   height: 38px;
@@ -459,7 +517,7 @@ body {
 
 .loading-text {
   font-size: 13px;
-  color: var(--chrome-blue);
+  color: var(--accent-text);
   font-weight: 500;
 }
 
@@ -467,7 +525,11 @@ body {
   margin-bottom: 4px;
 }
 
-.empty-state h3 {
+.empty-icon-bg {
+  fill: var(--bg-field);
+}
+
+.empty-state h2 {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
@@ -482,16 +544,21 @@ body {
 
 .empty-tips {
   margin-top: 6px;
-  background: #e8eaed;
+  background: var(--bg-field);
   padding: 6px 14px;
   border-radius: 20px;
   font-size: 11px;
   color: var(--text-secondary);
 }
 
+.empty-tips code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text-primary);
+}
+
 .tip-badge {
-  background: var(--chrome-blue);
-  color: #fff;
+  background: var(--accent-fill);
+  color: var(--on-accent);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -499,8 +566,26 @@ body {
   margin-right: 4px;
 }
 
+.error-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-fg);
+  border-radius: 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.error-state strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
 /* ==========================================================================
-   Chrome Official Website Step Cards (크롬 공식 사이트 카드 이식)
+   4단계 카드 — 단계별 색은 변수로만 정의
    ========================================================================== */
 .card-stack {
   display: flex;
@@ -508,10 +593,34 @@ body {
   gap: 12px;
 }
 
+/* 라이트: 2~4단계는 밝은 배경이므로 어두운 글자 */
+.step-1 { --hero-bg: #0b57d0; --hero-fg: #ffffff; --hero-chip-bg: rgba(255, 255, 255, 0.2); --hero-chip-border: rgba(255, 255, 255, 0.35);
+          --tray-bg: #d3e3fd; --primary-bg: #0b57d0; --primary-hover: #0842a0; --primary-fg: #ffffff; }
+.step-2 { --hero-bg: #f9ab00; --hero-fg: #1f1f1f; --hero-chip-bg: rgba(31, 31, 31, 0.08); --hero-chip-border: rgba(31, 31, 31, 0.16);
+          --tray-bg: #feefc3; --primary-bg: #1f1f1f; --primary-hover: #3c4043; --primary-fg: #ffffff; }
+.step-3 { --hero-bg: #a8dab5; --hero-fg: #1f1f1f; --hero-chip-bg: rgba(31, 31, 31, 0.08); --hero-chip-border: rgba(31, 31, 31, 0.16);
+          --tray-bg: #ceead6; --primary-bg: #137333; --primary-hover: #0d5224; --primary-fg: #ffffff; }
+.step-4 { --hero-bg: #f28b82; --hero-fg: #1f1f1f; --hero-chip-bg: rgba(31, 31, 31, 0.08); --hero-chip-border: rgba(31, 31, 31, 0.16);
+          --tray-bg: #fad2cf; --primary-bg: #c5221f; --primary-hover: #9e1a17; --primary-fg: #ffffff; }
+
+/* 다크: 모든 단계가 진한 배경 + 흰 글자 (대비 ≥ 5:1) */
+@media (prefers-color-scheme: dark) {
+  .step-1, .step-2, .step-3, .step-4 {
+    --hero-fg: #ffffff;
+    --hero-chip-bg: rgba(255, 255, 255, 0.2);
+    --hero-chip-border: rgba(255, 255, 255, 0.35);
+    --primary-fg: #ffffff;
+  }
+  .step-1 { --hero-bg: #174ea6; --tray-bg: #0f1f33; --primary-bg: #1967d2; --primary-hover: #1a73e8; }
+  .step-2 { --hero-bg: #a35d00; --tray-bg: #2d1c07; --primary-bg: #b06000; --primary-hover: #c26a00; }
+  .step-3 { --hero-bg: #137333; --tray-bg: #0f2416; --primary-bg: #1e8e3e; --primary-hover: #188038; }
+  .step-4 { --hero-bg: #c5221f; --tray-bg: #2d0f0f; --primary-bg: #d93025; --primary-hover: #b3261e; }
+}
+
 .drift-card {
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card);
   transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
   display: flex;
   flex-direction: column;
@@ -520,14 +629,15 @@ body {
 
 .drift-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card-hover);
 }
 
-/* Card Hero Section (Top colored compartment) */
 .card-hero {
   padding: 16px 18px 12px;
   display: flex;
   flex-direction: column;
+  background: var(--hero-bg);
+  color: var(--hero-fg);
 }
 
 .card-step-badge-row {
@@ -541,6 +651,7 @@ body {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.2px;
+  opacity: 0.85;
 }
 
 .card-scope-badge {
@@ -551,6 +662,8 @@ body {
   letter-spacing: 0.2px;
   display: inline-block;
   line-height: 1.3;
+  background: var(--hero-chip-bg);
+  border: 1px solid var(--hero-chip-border);
 }
 
 .card-headline {
@@ -567,228 +680,75 @@ body {
   line-height: 1.5;
   margin-bottom: 2px;
   word-break: keep-all;
+  opacity: 0.95;
 }
 
-/* Card Tray Section (Bottom contrasting compartment - Direct Button Placement) */
 .card-tray {
   padding: 12px 14px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  background: var(--tray-bg);
 }
 
-.card-actions.icon-only-actions {
+.card-actions {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 0;
   width: 100%;
 }
 
-.icon-only-actions .btn-dock {
+.btn-dock {
   flex: 0 0 38px;
   width: 38px;
   height: 38px;
-  min-width: 38px;
   padding: 0;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #ffffff;
-  color: var(--text-primary);
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  border: 1px solid var(--dock-btn-border);
+  background: var(--dock-btn-bg);
+  color: var(--dock-btn-fg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.icon-only-actions .btn-dock .dock-icon {
+.btn-dock:hover {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-dock:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.btn-dock[aria-expanded="true"] {
+  box-shadow: inset 0 0 0 2px var(--primary-bg);
+}
+
+.btn-dock-primary {
+  background: var(--primary-bg);
+  color: var(--primary-fg);
+  border-color: var(--primary-bg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.btn-dock-primary:hover {
+  background: var(--primary-hover);
+}
+
+.dock-icon {
   font-size: 17px;
   line-height: 1;
   display: inline-block;
 }
 
-.icon-only-actions .btn-dock:hover {
-  transform: translateY(-2px) scale(1.08);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  background: #ffffff;
-}
-
-.icon-only-actions .btn-dock:active {
-  transform: translateY(0) scale(0.96);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.icon-only-actions .btn-dock-primary {
-  border: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-}
-
-.icon-only-actions .btn-dock-primary:hover {
-  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
-}
-
-.btn-dock {
-  flex: 1;
-  min-width: 80px;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  border: 1px solid var(--border-default);
-  background: var(--bg-dock-btn);
-  color: var(--text-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.15s ease;
-}
-
-.btn-dock:hover {
-  background: #f1f3f4;
-  border-color: #c7c7c7;
-}
-
-.dock-icon {
-  font-size: 13px;
-}
-
 /* ==========================================================================
-   4단계별 크롬 고유 색상 테마 정의
-   ========================================================================== */
-
-/* 1단계: Chrome Royal Blue (크롬 파랑) */
-.step-1 .card-hero {
-  background: var(--chrome-blue);
-  color: #ffffff;
-}
-.step-1 .card-step-badge {
-  color: rgba(255, 255, 255, 0.85);
-}
-.step-1 .card-scope-badge {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-}
-.step-1 .card-headline {
-  color: #ffffff;
-}
-.step-1 .card-desc {
-  color: rgba(255, 255, 255, 0.95);
-}
-.step-1 .card-tray {
-  background: var(--chrome-blue-tray);
-}
-.step-1 .btn-dock-primary {
-  background: var(--chrome-blue);
-  color: #ffffff;
-  border-color: var(--chrome-blue);
-}
-.step-1 .btn-dock-primary:hover {
-  background: var(--chrome-blue-hover);
-}
-
-/* 2단계: Chrome Sunny Yellow (크롬 노랑) */
-.step-2 .card-hero {
-  background: var(--chrome-yellow);
-  color: #1f1f1f;
-}
-.step-2 .card-step-badge {
-  color: rgba(31, 31, 31, 0.75);
-}
-.step-2 .card-scope-badge {
-  background: rgba(31, 31, 31, 0.08);
-  color: #1f1f1f;
-  border: 1px solid rgba(31, 31, 31, 0.16);
-}
-.step-2 .card-headline {
-  color: #1f1f1f;
-}
-.step-2 .card-desc {
-  color: rgba(31, 31, 31, 0.9);
-}
-.step-2 .card-tray {
-  background: var(--chrome-yellow-tray);
-}
-.step-2 .btn-dock-primary {
-  background: #1f1f1f;
-  color: #ffffff;
-  border-color: #1f1f1f;
-}
-.step-2 .btn-dock-primary:hover {
-  background: #333333;
-}
-
-/* 3단계: Chrome Mint Green (크롬 초록) */
-.step-3 .card-hero {
-  background: var(--chrome-green);
-  color: #1f1f1f;
-}
-.step-3 .card-step-badge {
-  color: rgba(31, 31, 31, 0.75);
-}
-.step-3 .card-scope-badge {
-  background: rgba(31, 31, 31, 0.08);
-  color: #1f1f1f;
-  border: 1px solid rgba(31, 31, 31, 0.16);
-}
-.step-3 .card-headline {
-  color: #1f1f1f;
-}
-.step-3 .card-desc {
-  color: rgba(31, 31, 31, 0.9);
-}
-.step-3 .card-tray {
-  background: var(--chrome-green-tray);
-}
-.step-3 .btn-dock-primary {
-  background: var(--chrome-green-dark);
-  color: #ffffff;
-  border-color: var(--chrome-green-dark);
-}
-.step-3 .btn-dock-primary:hover {
-  background: #0d5224;
-}
-
-/* 4단계: Chrome Coral Red (크롬 빨강) */
-.step-4 .card-hero {
-  background: var(--chrome-red);
-  color: #ffffff;
-}
-.step-4 .card-step-badge {
-  color: rgba(255, 255, 255, 0.85);
-}
-.step-4 .card-scope-badge {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-}
-.step-4 .card-headline {
-  color: #ffffff;
-}
-.step-4 .card-desc {
-  color: rgba(255, 255, 255, 0.95);
-}
-.step-4 .card-tray {
-  background: var(--chrome-red-tray);
-}
-.step-4 .btn-dock-primary {
-  background: var(--chrome-red-dark);
-  color: #ffffff;
-  border-color: var(--chrome-red-dark);
-}
-.step-4 .btn-dock-primary:hover {
-  background: #9e1a17;
-}
-
-/* ==========================================================================
-   Phrase Drawer (Google Filter Chips Style)
+   구절 분해 서랍
    ========================================================================== */
 .phrase-drawer {
   display: flex;
@@ -802,99 +762,31 @@ body {
 }
 
 .phrase-pill {
-  background: var(--bg-pill);
+  background: var(--bg-surface);
   border: 1px solid var(--border-default);
   color: var(--text-primary);
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .phrase-pill:hover {
-  background: var(--chrome-blue-tray);
-  color: var(--text-primary);
-  border-color: var(--chrome-blue);
-}
-
-/* 다크 테마 시 스텝 카드별 고대비 가독성 최적화 */
-@media (prefers-color-scheme: dark) {
-  .step-2 .card-hero,
-  .step-3 .card-hero {
-    color: #ffffff;
-  }
-  .step-2 .card-step-badge,
-  .step-3 .card-step-badge {
-    color: rgba(255, 255, 255, 0.85);
-  }
-  .step-2 .card-scope-badge,
-  .step-3 .card-scope-badge {
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.35);
-  }
-  .step-2 .card-headline,
-  .step-3 .card-headline {
-    color: #ffffff;
-  }
-  .step-2 .card-desc,
-  .step-3 .card-desc {
-    color: rgba(255, 255, 255, 0.95);
-  }
-  .step-2 .btn-dock-primary {
-    background: #e37400;
-    border-color: #e37400;
-    color: #ffffff;
-  }
-  .step-2 .btn-dock-primary:hover {
-    background: #f29900;
-  }
-  .step-3 .btn-dock-primary {
-    background: #1e8e3e;
-    border-color: #1e8e3e;
-    color: #ffffff;
-  }
-  .step-3 .btn-dock-primary:hover {
-    background: #34a853;
-  }
-  .step-4 .btn-dock-primary {
-    background: #d93025;
-    border-color: #d93025;
-    color: #ffffff;
-  }
-  .step-4 .btn-dock-primary:hover {
-    background: #ea4335;
-  }
-  .icon-only-actions .btn-dock {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-    color: #e8eaed;
-  }
-  .icon-only-actions .btn-dock:hover {
-    background: rgba(255, 255, 255, 0.22);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
-  }
-  .dock-legend-bar {
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  }
-  .empty-card {
-    background: var(--bg-surface);
-  }
+  background: var(--bg-tinted);
+  border-color: var(--accent-text);
 }
 
 .phrase-loading {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-style: italic;
   padding: 4px 0;
 }
 
 /* ==========================================================================
-   Footer
+   푸터
    ========================================================================== */
 .app-footer {
   margin-top: auto;
@@ -908,6 +800,10 @@ body {
 }
 
 .footer-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   font-size: 11px;
   color: var(--text-muted);
   text-decoration: none;
@@ -915,26 +811,25 @@ body {
 }
 
 .footer-link:hover {
-  color: var(--chrome-blue);
+  color: var(--accent-text);
   text-decoration: underline;
 }
 
-/* ---- v1.1: 내장 연상(폴백) 안내 ---- */
-.fallback-note {
-  margin-top: 6px;
-  font-size: 11.5px;
-  line-height: 1.4;
-  color: #8a5300;
-  background: #fef7e0;
-  border: 1px solid #f9dc8c;
-  border-radius: 8px;
-  padding: 4px 8px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .fallback-note {
-    color: #fdd663;
-    background: #3b2f12;
-    border-color: #6b5420;
+/* ==========================================================================
+   모션 줄이기
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+  .drift-card:hover,
+  .btn-dock:hover,
+  .btn-dock:active {
+    transform: none;
+  }
+  .chrome-spinner {
+    animation-duration: 2s;
   }
 }

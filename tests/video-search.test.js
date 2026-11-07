@@ -40,3 +40,30 @@ test('videoRenderer 수집: 순서 유지, 중복·잘못된 ID 제외, limit', 
   assert.equal(out[0].thumb, 'https://i.ytimg.com/vi/AAAAAAAAAAA/mqdefault.jpg');
   assert.equal(out[0].page, 'https://www.youtube.com/watch?v=AAAAAAAAAAA');
 });
+
+const short = (id, a11y, primary) => ({
+  shortsLockupViewModel: {
+    accessibilityText: a11y,
+    onTap: { innertubeCommand: { reelWatchEndpoint: { videoId: id } } },
+    ...(primary ? { overlayMetadata: { primaryText: { content: primary } } } : {})
+  }
+});
+
+test('일반 영상이 모자라면 쇼츠로 채움 (일반 영상 우선)', () => {
+  const data = {
+    a: [
+      short('SSSSSSSSSS1', '녹슨 우체통 하나가 서 있었어., 조회수 12회 - Shorts 동영상 재생'),
+      short('SSSSSSSSSS2', 'x', '오버레이 제목'),
+      short('SSSSSSSSSS3', '셋째 쇼츠, 조회수 1회 - Shorts 동영상 재생')
+    ],
+    b: [vr('VVVVVVVVVVV', '일반 영상')]
+  };
+
+  const out = parseYouTubeResults(data, 3);
+  assert.deepEqual(out.map((v) => v.id), ['VVVVVVVVVVV', 'SSSSSSSSSS1', 'SSSSSSSSSS2']);
+  assert.equal(out[0].isShort, false);
+  assert.equal(out[1].isShort, true);
+  assert.equal(out[1].title, '녹슨 우체통 하나가 서 있었어.');
+  assert.equal(out[1].page, 'https://www.youtube.com/shorts/SSSSSSSSSS1');
+  assert.equal(out[2].title, '오버레이 제목');
+});

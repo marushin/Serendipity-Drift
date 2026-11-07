@@ -51,13 +51,35 @@
     }
   }
 
-  /** 이미지·동영상·뉴스 등 다른 탭이 아닌 '전체(웹)' 검색 결과인지 */
-  function isWebSearchPage() {
-    if (!location.pathname.startsWith('/search')) return false;
+  /**
+   * 검색 결과 페이지 종류: 'web' | 'image' | 'video' | null(뉴스·쇼핑 등 그 밖의 탭)
+   */
+  function pageKind() {
+    if (!location.pathname.startsWith('/search')) return null;
     const params = new URLSearchParams(location.search);
-    if (params.get('tbm')) return false;
+    const tbm = params.get('tbm');
     const udm = params.get('udm');
-    return !udm || udm === '14';
+    if (udm === '2' || tbm === 'isch') return 'image';
+    if (udm === '7' || tbm === 'vid') return 'video';
+    if (!tbm && (!udm || udm === '14')) return 'web';
+    return null;
+  }
+
+  const UDM = { image: '2', video: '7' };
+
+  /** 같은 탭 종류로 검색 (사용자가 쓰던 구글 도메인 유지) */
+  function tabSearchUrl(q, kind) {
+    const base = `${location.origin}/search?q=${encodeURIComponent(q)}`;
+    return UDM[kind] ? `${base}&udm=${UDM[kind]}` : base;
+  }
+
+  async function isSidePanelOpen() {
+    try {
+      const res = await sendMessage({ type: 'IS_SIDEPANEL_OPEN' });
+      return !!(res?.success && res.data);
+    } catch (_) {
+      return false;
+    }
   }
 
   function extractSearchQuery() {
@@ -158,10 +180,11 @@
     requestToken++; // 진행 중인 응답 무효화
   }
 
-  async function injectDriftBar(query) {
+  async function injectDriftBar(query, kind = 'web') {
     if (!query) return;
+    const key = `${kind}\u0000${query}`;
     const existing = document.getElementById(BAR_ID);
-    if (existing && currentQuery === query) return;
+    if (existing && currentQuery === key) return;
     existing?.remove();
 
     const target = document.getElementById('search') ||
@@ -170,7 +193,8 @@
                    document.querySelector('[role="main"]');
     if (!target?.parentNode) return;
 
-    currentQuery = query;
+    currentQuery = key;
+    const isMedia = kind !== 'web';
 
     const titleGroup = el('div', { className: 'serendipity-title-group' });
     titleGroup.innerHTML = CHROME_ICON_SVG;
@@ -180,11 +204,11 @@
     );
 
     const indicator = el('div', { className: 'serendipity-vector-tag', 'aria-live': 'polite' });
-    const chips = el('div', { className: 'serendipity-chips-row' });
+    const chips = el('div', { className: isMedia ? 'serendipity-media-row' : 'serendipity-chips-row' });
 
     const bar = el('div', {
       id: BAR_ID,
-      className: `serendipity-drift-container${detectDarkTheme() ? ' serendipity-dark' : ''}`
+      className: `serendipity-drift-container${isMedia ? ' serendipity-is-media' : ''}${detectDarkTheme() ? ' serendipity-dark' : ''}`
     }, [
       el('div', { className: 'serendipity-drift-header' }, [
         titleGroup,
@@ -208,7 +232,7 @@
       indicator,
       chips
     ]);
-    bar._refs = { indicator, chips };
+    bar._refs = { indicator, chips, kind };
 
     target.parentNode.insertBefore(bar, target);
 
@@ -269,7 +293,8 @@
     const dir = drift.direction;
     const isFallback = drift.source !== 'gemini-nano';
 
-    indicator.replaceChildren(
+    // replaceChildren 은 null 을 "null" 글자로 넣으므로 빈 항목은 걸러냄
+    indicator.replaceChildren(...[
       el('span', { className: 'serendipity-vector-icon', text: dir.icon || '🧭' }),
       el('strong', { className: 'serendipity-vector-name', text: dir.title }),
       el('span', { className: 'serendipity-vector-prompt', text: `"${dir.prompt}"` }),
@@ -280,7 +305,13 @@
             text: '내장 연상 모드'
           })
         : null
-    );
+    ].filter(Boolean));
+
+    const { kind } = bar._refs;
+    if (kind !== 'web') {
+      renderMediaSteps(chips, drift.queries || [], kind);
+      return;
+    }
 
     chips.replaceChildren(...(drift.queries || []).map((item) => {
       const rank = item.rank || 1;
@@ -293,9 +324,71 @@
           el('span', { className: 'serendipity-stage-rank', text: `${rank}단계 · ${item.distance} 이탈` })
         ]),
         el('div', { className: 'serendipity-chip-query', text: item.query }),
-        el('div', { className: 'serendipity-chip-exp', text: item.explanation }),
-        el('span', { className: 'serendipity-chip-link', text: '크롬 검색창으로 바로 가기 ↗' })
+        el('div', { className: 'serendipity-chip-exp', text: item.explanation })
       ]);
+    }));
+  }
+
+  /* -------------------------------------------------------------- */
+  /* 이미지·동영상 탭: 단계별 썸네일 미리보기                            */
+  /* 단계 칸을 누르면 이 페이지가 그 키워드의 같은 탭 검색으로 이동합니다. */
+  /* -------------------------------------------------------------- */
+
+  const MEDIA_PER_STEP = 4;
+
+  function renderMediaSteps(row, queries, kind) {
+    row.replaceChildren(...queries.map((item) => {
+      const rank = item.rank || 1;
+      const grid = el('div', {
+        className: `serendipity-media-grid${kind === 'video' ? ' is-video' : ''}`,
+        'aria-busy': 'true'
+      });
+      const step = el('a', {
+        className: `serendipity-media-step chip-step-${rank}`,
+        href: tabSearchUrl(item.query, kind),
+        title: `${item.stage}\n${item.explanation}\n(클릭하여 이 키워드로 ${kind === 'video' ? '동영상' : '이미지'} 검색)`
+      }, [
+        el('div', { className: 'serendipity-media-label' }, [
+          el('span', { className: 'serendipity-stage-rank', text: `${rank}단계` }),
+          el('span', { className: 'serendipity-media-query', text: item.query })
+        ]),
+        grid
+      ]);
+      loadMediaInto(grid, item.query, kind);
+      return step;
+    }));
+  }
+
+  async function loadMediaInto(grid, query, kind) {
+    grid.replaceChildren(...Array.from({ length: MEDIA_PER_STEP }, () =>
+      el('div', { className: 'serendipity-media-thumb serendipity-media-skeleton' })));
+
+    let items = [];
+    try {
+      const res = await sendMessage({ type: 'FETCH_MEDIA', kind, query, limit: MEDIA_PER_STEP });
+      items = res?.success ? res.data : [];
+    } catch (_) {}
+    if (!grid.isConnected) return;
+
+    grid.removeAttribute('aria-busy');
+    if (!items.length) {
+      grid.replaceChildren(el('span', { className: 'serendipity-media-empty', text: '결과를 불러오지 못했습니다.' }));
+      return;
+    }
+
+    grid.replaceChildren(...items.map((it) => {
+      const cell = el('div', { className: 'serendipity-media-thumb' });
+      const img = el('img', { src: it.thumb, alt: '', loading: 'lazy', decoding: 'async', referrerpolicy: 'no-referrer' });
+      img.addEventListener('error', () => cell.remove(), { once: true });
+      cell.append(img);
+      if (kind === 'video') {
+        cell.append(el('span', {
+          className: 'serendipity-media-duration',
+          'aria-hidden': 'true',
+          text: it.isShort ? 'Shorts' : (it.duration || 'LIVE')
+        }));
+      }
+      return cell;
     }));
   }
 
@@ -303,15 +396,23 @@
   /* 초기화 & SPA 네비게이션 감지                                       */
   /* -------------------------------------------------------------- */
 
-  function init() {
+  async function init() {
     injectHomeSearchButton();
 
-    if (!isWebSearchPage()) {
+    const kind = pageKind();
+    if (!kind) {
       removeDriftBar();
       return;
     }
     const q = extractSearchQuery();
-    if (q) injectDriftBar(q);
+    if (!q) return;
+
+    // 이미지·동영상 탭은 사이드패널이 열려 있으면 생략 (사이드패널이 이미 같은 결과를 보여줌)
+    if (kind !== 'web' && await isSidePanelOpen()) {
+      removeDriftBar();
+      return;
+    }
+    injectDriftBar(q, kind);
   }
 
   if (document.readyState === 'loading') {

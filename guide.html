@@ -121,6 +121,9 @@
       flex-direction: column;
       gap: 14px;
     }
+    li > ul {
+      margin-top: 8px;
+    }
     li {
       color: var(--text-body);
       font-size: 14px;
@@ -211,55 +214,66 @@
     </header>
 
     <section class="card">
-      <h2>🚀 크롬 내장 Gemini Nano 모델 활성화 방법 (최초 1회)</h2>
+      <h2>🚀 Gemini Nano 모델 준비하기 (최초 1회)</h2>
       <p class="lead">
-        Chrome 128 이상 버전에서는 기기 내부에 경량 AI 모델(Gemini Nano)을 활성화하여 백엔드 없이 무료로 호출할 수 있습니다.
+        Chrome 138 이상에서는 확장 프로그램이 내장 AI(Prompt API)를 <strong>플래그 없이</strong> 사용할 수 있습니다.
+        모델(Gemini Nano, 수 GB)만 한 번 내려받으면 이후에는 인터넷 없이도 기기 안에서 동작합니다.
       </p>
 
       <ol>
         <li>
-          <strong>Prompt API 플래그 켜기:</strong><br>
-          아래 주소를 복사하여 새 탭 주소창에 붙여넣고 이동한 뒤, 설정을 <strong>Enabled</strong>로 변경합니다.
+          <strong>Chrome 최신 버전으로 업데이트:</strong><br>
+          아래 주소에서 버전을 확인하고 업데이트한 뒤 다시 시작합니다. (138 이상 필요)
           <div class="code-row">
-            <code>chrome://flags/#prompt-api-for-gemini-nano</code>
-            <button type="button" class="copy-btn" data-copy="chrome://flags/#prompt-api-for-gemini-nano">복사</button>
+            <code>chrome://settings/help</code>
+            <button type="button" class="copy-btn" data-copy="chrome://settings/help">복사</button>
           </div>
         </li>
         <li>
-          <strong>사양 제한 우회 플래그 켜기:</strong><br>
-          아래 주소로 이동하여 설정을 <strong>Enabled BypassPerfRequirement</strong>로 변경합니다.
+          <strong>기기 내 AI 설정 켜기:</strong><br>
+          <strong>설정 → 시스템 → 기기 내 AI(On-device AI)</strong>가 켜져 있는지 확인합니다. 꺼져 있으면 모델을 내려받지 않고, 이미 받은 모델도 삭제됩니다.
           <div class="code-row">
-            <code>chrome://flags/#optimization-guide-on-device-model</code>
-            <button type="button" class="copy-btn" data-copy="chrome://flags/#optimization-guide-on-device-model">복사</button>
+            <code>chrome://settings/system</code>
+            <button type="button" class="copy-btn" data-copy="chrome://settings/system">복사</button>
           </div>
         </li>
         <li>
-          <strong>Chrome 완전 재시작:</strong><br>
-          브라우저 우측 하단에 뜨는 <strong>[Relaunch (다시 시작)]</strong> 버튼을 눌러 크롬을 재시작합니다.
+          <strong>WebAI Studio 확장으로 모델 받기 (권장):</strong><br>
+          Chrome 공식 문서가 안내하는 개발자 도구 확장입니다. 설치한 뒤 아무 페이지에서 <strong>F12(개발자 도구) → WebAI 탭</strong>을 엽니다.
+          <ul class="compact-list">
+            <li><strong>Overview / Dashboard:</strong> Gemini Nano 상태(Ready, Downloadable 등)를 확인하고 모델 다운로드를 진행합니다.</li>
+            <li><strong>Diagnosis:</strong> 모델이 받아지지 않을 때 원인(기기 조건, 설정 등)을 진단합니다.</li>
+          </ul>
+          <div class="code-row">
+            <code>https://web-ai.studio/extension</code>
+            <button type="button" class="copy-btn" data-copy="https://web-ai.studio/extension">복사</button>
+          </div>
         </li>
         <li>
-          <strong>컴포넌트에서 모델 다운로드 확인:</strong><br>
-          크롬 주소창에 아래 주소로 접속한 뒤 <code>Optimization Guide On Device Model</code> 항목의 <strong>[Check for update (업데이트 확인)]</strong>을 누릅니다. 모델(약 1~2GB) 다운로드가 완료되면 상태가 <code>Up-to-date</code>로 바뀝니다.
+          <strong>설치 확인:</strong><br>
+          아래 페이지에서 모델 상태와 크기를 확인할 수 있습니다. 오류가 있으면 <strong>Broker State</strong> 탭을 확인하세요.
           <div class="code-row">
-            <code>chrome://components</code>
-            <button type="button" class="copy-btn" data-copy="chrome://components">복사</button>
+            <code>chrome://on-device-internals</code>
+            <button type="button" class="copy-btn" data-copy="chrome://on-device-internals">복사</button>
           </div>
+          준비가 끝나면 이 확장의 팝업과 사이드패널 상태 배지가 <strong>"Gemini Nano 준비됨"</strong>으로 바뀝니다.
         </li>
       </ol>
 
       <div class="highlight-box">
-        💡 <strong>팁:</strong> 플래그를 켠 뒤 확장 프로그램 팝업의 상태 카드나 사이드패널의 상태 배지를 <strong>클릭</strong>하면 모델 다운로드를 바로 시작할 수 있습니다. 모델을 쓸 수 없는 동안에는 <strong>내장 연상 키워드</strong>로 동작하며, 결과에 <code>내장 연상 모드</code> 표시가 붙습니다.
+        💡 <strong>다른 방법:</strong> 모델 상태가 "다운로드 가능"일 때는 이 확장의 팝업 상태 카드나 사이드패널의 <strong>[모델 받기]</strong> 배지를 클릭해도 다운로드가 시작됩니다. (Chrome 정책상 모델 다운로드는 사용자 클릭이 있어야 시작됩니다.)
+        모델을 쓸 수 없는 동안에는 <strong>내장 연상 키워드</strong>로 동작하며, 결과에 <code>내장 연상 모드</code> 표시가 붙습니다.
       </div>
     </section>
 
     <section class="card">
       <h2>🖥️ 기기 요구사항</h2>
-      <p class="lead">플래그를 켰는데도 모델이 내려받아지지 않는다면 대부분 아래 조건 때문입니다. (Chrome 공식 문서 기준이며 버전에 따라 바뀔 수 있습니다.)</p>
+      <p class="lead">모델이 받아지지 않는다면 대부분 아래 조건 때문입니다. (Chrome 공식 문서 기준이며 버전에 따라 바뀔 수 있습니다.)</p>
       <ul class="compact-list">
-        <li><strong>운영체제:</strong> Windows 10/11, macOS 13 이상, Linux, 또는 Chromebook Plus</li>
-        <li><strong>저장 공간:</strong> Chrome 프로필이 있는 드라이브에 여유 공간 약 22GB 이상 (모델 자체는 더 작지만 여유 공간이 부족하면 다운로드하지 않으며, 공간이 줄면 자동 삭제됩니다)</li>
+        <li><strong>운영체제:</strong> Windows 10/11, macOS 13 이상, Linux, 또는 Chromebook Plus (모바일은 지원하지 않음)</li>
+        <li><strong>저장 공간:</strong> Chrome 프로필이 있는 드라이브에 여유 공간 22GB 이상. 다운로드 뒤 여유 공간이 10GB 아래로 줄면 모델이 자동 삭제됩니다.</li>
         <li><strong>GPU 또는 CPU:</strong> VRAM 4GB를 넘는 GPU, 또는 RAM 16GB 이상 + 4코어 이상 CPU</li>
-        <li><strong>네트워크:</strong> 데이터 제한이 없는(무제한) 연결</li>
+        <li><strong>네트워크:</strong> 첫 다운로드 때만 데이터 제한이 없는 연결이 필요합니다.</li>
       </ul>
       <div class="note-box">
         조건을 만족하지 않는 기기에서도 확장 프로그램은 <strong>내장 연상 모드</strong>로 계속 동작합니다.
@@ -267,18 +281,47 @@
     </section>
 
     <section class="card">
-      <h2>⚡ 크롬 검색창을 활용하는 3가지 탐색 방법</h2>      <ul>
+      <h2>🛠️ 모델이 준비되지 않을 때</h2>
+      <ol>
+        <li>Chrome을 완전히 종료했다가 다시 시작합니다.</li>
+        <li><code>chrome://settings/system</code>에서 <strong>기기 내 AI</strong>가 켜져 있는지 다시 확인합니다.</li>
+        <li><code>chrome://on-device-internals</code>에서 다운로드가 진행 중인지 확인합니다. 첫 다운로드는 시간이 걸릴 수 있습니다.</li>
         <li>
-          <strong>1. 크롬 주소창(Omnibox)에서 바로 비틀기:</strong><br>
-          주소창에 <code>drift 검색어</code> (예: <code>drift 인공지능</code>)를 입력하면, 1~4단계 비틀린 검색어가 주소창 자동완성에 즉시 추천됩니다. 엔터를 치면 해당 검색어로 구글 검색창이 바로 열립니다.
+          개발자 도구 콘솔(F12 → Console)에서 아래를 실행해 <code>"available"</code>이 나오는지 확인합니다.
+          <div class="code-row">
+            <code>await LanguageModel.availability()</code>
+            <button type="button" class="copy-btn" data-copy="await LanguageModel.availability()">복사</button>
+          </div>
+        </li>
+        <li>WebAI Studio의 <strong>Diagnosis</strong> 탭에서 원인을 확인합니다.</li>
+      </ol>
+      <div class="note-box">
+        사양 조건을 아슬아슬하게 못 넘는 기기라면 최후 수단으로 <code>chrome://flags/#optimization-guide-on-device-model</code>을 <strong>Enabled BypassPerfRequirement</strong>로 바꿔 볼 수 있습니다. 실험 기능이라 동작이 느리거나 불안정할 수 있습니다.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>⚡ 사용 방법</h2>
+      <ul>
+        <li>
+          <strong>1. 주소창(Omnibox)에서 바로 비틀기:</strong><br>
+          주소창에 <code>drift 검색어</code> (예: <code>drift 인공지능</code>)를 입력하면 1~4단계 비틀린 검색어가 자동완성으로 추천됩니다. Enter를 누르면 그 검색어로 구글 검색이 열립니다.
         </li>
         <li>
-          <strong>2. 구글 검색 결과 페이지에서 바로 발견:</strong><br>
-          구글 검색창에서 평소처럼 검색하면 결과 상단에 <strong>[비틀린 사유의 궤적]</strong> 바가 주입됩니다. 4단계 칩을 클릭해 즉시 이동하거나, 다른 사유 벡터로 재셔플할 수 있습니다.
+          <strong>2. 구글 검색 페이지에서 바로 발견:</strong><br>
+          평소처럼 구글에서 검색하면 결과 위에 <strong>[비틀린 사유의 궤적]</strong> 위젯이 나타납니다. 단계 카드를 누르면 그 검색어로 이동하고, <strong>🎲 다른 각도</strong>로 다른 사유 벡터를 적용할 수 있습니다.
+          구글 <strong>이미지·동영상 탭</strong>에서는 단계마다 썸네일 4개를 미리 보여줍니다. (사이드패널이 열려 있는 창에서는 생략)
         </li>
         <li>
-          <strong>3. 사이드패널 카드 스택 & 사유의 가지치기:</strong><br>
-          브라우저 사이드패널을 열어 20가지 철학적·예술적 사유 벡터를 직접 선택하고, <strong>[🌱 이 조각으로 도약]</strong>을 눌러 꼬리에 꼬리를 무는 사유의 궤적(Breadcrumb)을 이어갈 수 있습니다.
+          <strong>3. 사이드패널에서 이미지·동영상·텍스트로 탐색:</strong><br>
+          사이드패널에서 20가지 사유 벡터를 고르고 보기 방식을 선택합니다.
+          <ul class="compact-list">
+            <li><strong>🖼️ 이미지:</strong> 단계마다 썸네일 4장. 클릭하면 확대 보기, "원본 페이지 ↗"는 본창으로 엽니다.</li>
+            <li><strong>🎬 동영상:</strong> 단계마다 YouTube 영상 4개. 클릭하면 본창에서 재생합니다.</li>
+            <li><strong>📝 텍스트:</strong> 비틀린 검색어와 설명 카드.</li>
+          </ul>
+          이미지·동영상 모드에서 비틀기를 실행하면 원래 검색어의 정확한 결과(0단계)가 본창의 구글 이미지·동영상 탭에 함께 열립니다.
+          <strong>🌱 이 조각으로 도약</strong>을 누르면 그 검색어에서 다시 비틀며 사유의 궤적을 이어갑니다.
         </li>
       </ul>
     </section>

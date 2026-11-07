@@ -216,10 +216,21 @@
 /* --------------------------------------------------------------------------
    4단계 칩 (각 단계는 색 변수만 다름)
    -------------------------------------------------------------------------- */
+/* 4단계는 4열 또는 2열로만 나눔 (3+1 줄바꿈 방지). 기준은 위젯 자신의 너비 */
+.serendipity-drift-container {
+  container-type: inline-size;
+}
+
 .serendipity-chips-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+@container (max-width: 760px) {
+  .serendipity-chips-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .chip-step-1 { --chip-bg: #f0f6ff; --chip-border: #d3e3fd; --chip-accent: #0b57d0; --chip-query: #0b57d0; }
@@ -285,19 +296,137 @@ a.serendipity-stage-chip:visited {
   font-size: 12px;
   color: var(--sd-text-2);
   line-height: 1.45;
-  margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.serendipity-chip-link {
-  font-size: 11px;
-  color: var(--chip-accent);
-  text-decoration: underline;
+/* --------------------------------------------------------------------------
+   이미지·동영상 탭: 단계별 썸네일 (넓은 화면에서 4단계 가로 배치)
+   Google 의 img 스타일에 휘둘리지 않도록 크기를 명시합니다.
+   -------------------------------------------------------------------------- */
+.serendipity-drift-container.serendipity-is-media {
+  max-width: 1080px;
+}
+
+.serendipity-media-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@container (max-width: 760px) {
+  .serendipity-media-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+a.serendipity-media-step,
+a.serendipity-media-step:hover,
+a.serendipity-media-step:visited {
+  text-decoration: none;
+  color: inherit;
+}
+
+.serendipity-media-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 16px;
+  box-shadow: var(--sd-chip-shadow);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.serendipity-media-step:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sd-chip-shadow-hover);
+}
+
+.serendipity-media-step:focus-visible {
+  outline: 2px solid var(--sd-accent);
+  outline-offset: 2px;
+}
+
+.serendipity-media-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 2px;
+}
+
+.serendipity-media-query {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--chip-query);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.serendipity-media-label .serendipity-stage-rank {
+  flex-shrink: 0;
+}
+
+.serendipity-media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.serendipity-media-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--chip-border);
+}
+
+.serendipity-media-grid.is-video .serendipity-media-thumb {
+  aspect-ratio: 16 / 9;
+}
+
+.serendipity-media-thumb img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  object-fit: cover;
+}
+
+.serendipity-media-skeleton {
+  animation: serendipity-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes serendipity-pulse {
+  50% { opacity: 0.5; }
+}
+
+.serendipity-media-duration {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #ffffff;
+  font-size: 10px;
   font-weight: 600;
-  align-self: flex-start;
+  line-height: 1.5;
+}
+
+.serendipity-media-empty {
+  grid-column: 1 / -1;
+  font-size: 11.5px;
+  color: var(--sd-muted);
+  padding: 10px 2px;
 }
 
 /* --------------------------------------------------------------------------
@@ -354,8 +483,12 @@ a.serendipity-stage-chip:visited {
   .serendipity-google-btn {
     transition: none !important;
   }
-  .serendipity-stage-chip:hover {
+  .serendipity-stage-chip:hover,
+  .serendipity-media-step:hover {
     transform: none;
+  }
+  .serendipity-media-skeleton {
+    animation: none;
   }
   .serendipity-spinner {
     animation-duration: 2s;

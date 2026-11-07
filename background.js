@@ -227,6 +227,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'RUN_DRIFT':
       return respond(runDrift(request.data || {}), sendResponse);
 
+    case 'IS_SIDEPANEL_OPEN':
+      // 콘텐츠 스크립트가 자기 창에 사이드패널이 열려 있는지 확인 (열려 있으면 인라인 미디어 위젯 생략)
+      return respond(
+        chrome.runtime.getContexts({ contextTypes: ['SIDE_PANEL'] })
+          .then((ctx) => ctx.some((c) => c.windowId === sender.tab?.windowId)),
+        sendResponse
+      );
+
     case 'FETCH_MEDIA':
       return respond(getMedia(request.kind, request.query, request.limit), sendResponse);
 

@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const badge = document.createElement('span');
         badge.className = 'thumb-duration';
         badge.setAttribute('aria-hidden', 'true');
-        badge.textContent = item.duration || 'LIVE';
+        badge.textContent = item.isShort ? 'Shorts' : (item.duration || 'LIVE');
         btn.appendChild(badge);
       }
 

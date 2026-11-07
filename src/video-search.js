@@ -20,38 +20,73 @@ export function extractInitialData(html) {
 
 const textOf = (node) => node?.simpleText ?? (node?.runs || []).map((r) => r.text).join('') ?? '';
 
+/** 쇼츠 접근성 문구 "제목, 조회수 12회 - Shorts 동영상 재생" → "제목" */
+function shortsTitle(s) {
+  const primary = s.overlayMetadata?.primaryText?.content;
+  if (primary) return primary.trim();
+  return String(s.accessibilityText || '').replace(/,\s*[^,]*-\s*Shorts[^,]*$/i, '').trim();
+}
+
 /**
- * ytInitialData → [{ id, thumb, page, title, channel, duration }]
- * 순서를 유지하며 깊이 우선으로 videoRenderer 를 수집합니다 (쇼츠·광고·채널은 제외).
+ * ytInitialData → [{ id, thumb, page, title, channel, duration, isShort }]
+ * 일반 영상(videoRenderer)을 순서대로 먼저 채우고, 모자라면 쇼츠(shortsLockupViewModel)로 채웁니다.
+ * 낯선 키워드일수록 YouTube 가 쇼츠만 돌려주는 경우가 많기 때문입니다.
  */
 export function parseYouTubeResults(data, limit = 4) {
-  const out = [];
+  const videos = [];
+  const shorts = [];
   const seen = new Set();
 
+  const take = (id) => {
+    if (!VIDEO_ID_RE.test(id || '') || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  };
+
   const walk = (node) => {
-    if (out.length >= limit || !node || typeof node !== 'object') return;
+    if (videos.length >= limit || !node || typeof node !== 'object') return;
+
     const v = node.videoRenderer;
-    if (v && VIDEO_ID_RE.test(v.videoId || '') && !seen.has(v.videoId)) {
-      seen.add(v.videoId);
-      const id = v.videoId;
-      out.push({
-        id,
-        thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
-        page: `https://www.youtube.com/watch?v=${id}`,
-        title: textOf(v.title).trim(),
-        channel: textOf(v.ownerText).trim(),
-        duration: textOf(v.lengthText).trim() // 라이브는 빈 문자열
-      });
+    if (v) {
+      if (take(v.videoId)) {
+        videos.push({
+          id: v.videoId,
+          thumb: `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`,
+          page: `https://www.youtube.com/watch?v=${v.videoId}`,
+          title: textOf(v.title).trim(),
+          channel: textOf(v.ownerText).trim(),
+          duration: textOf(v.lengthText).trim(), // 라이브는 빈 문자열
+          isShort: false
+        });
+      }
       return;
     }
+
+    const s = node.shortsLockupViewModel;
+    if (s) {
+      const id = s.onTap?.innertubeCommand?.reelWatchEndpoint?.videoId;
+      if (shorts.length < limit && take(id)) {
+        shorts.push({
+          id,
+          thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`, // 16:9 중앙 크롭
+          page: `https://www.youtube.com/shorts/${id}`,
+          title: shortsTitle(s),
+          channel: '',
+          duration: '',
+          isShort: true
+        });
+      }
+      return;
+    }
+
     for (const key in node) {
       walk(node[key]);
-      if (out.length >= limit) return;
+      if (videos.length >= limit) return;
     }
   };
 
   walk(data);
-  return out;
+  return videos.concat(shorts).slice(0, limit);
 }
 
 export function youtubeResultsUrl(query) {

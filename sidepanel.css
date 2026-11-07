@@ -43,11 +43,6 @@
   --idle-bg: #f1f3f4;  --idle-dot: #747775;
   --disabled-bg: #dadce0; --disabled-fg: #5f6368;
 
-  /* 카드 하단 아이콘 버튼 */
-  --dock-btn-bg: #ffffff;
-  --dock-btn-border: rgba(0, 0, 0, 0.08);
-  --dock-btn-fg: #1f1f1f;
-
   /* 그림자 */
   --shadow-sm: 0 1px 3px rgba(60, 64, 67, 0.1);
   --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.06);
@@ -87,10 +82,6 @@
     --error-bg: #3b1513; --error-fg: #f6aea9; --error-border: #6b2420;
     --idle-bg: #2d2e31;  --idle-dot: #9aa0a6;
     --disabled-bg: #3c4043; --disabled-fg: #9aa0a6;
-
-    --dock-btn-bg: rgba(255, 255, 255, 0.12);
-    --dock-btn-border: rgba(255, 255, 255, 0.16);
-    --dock-btn-fg: #e8eaed;
 
     --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.35);
@@ -595,13 +586,17 @@ button {
 
 /* 라이트: 2~4단계는 밝은 배경이므로 어두운 글자 */
 .step-1 { --hero-bg: #0b57d0; --hero-fg: #ffffff; --hero-chip-bg: rgba(255, 255, 255, 0.2); --hero-chip-border: rgba(255, 255, 255, 0.35);
-          --tray-bg: #d3e3fd; --primary-bg: #0b57d0; --primary-hover: #0842a0; --primary-fg: #ffffff; }
+          --card-divider: rgba(255, 255, 255, 0.18); --primary-bg: #ffffff; --primary-hover: #f1f3f4; --primary-fg: #0b57d0;
+          --secondary-bg: rgba(255, 255, 255, 0.18); --secondary-border: rgba(255, 255, 255, 0.35); --secondary-fg: #ffffff; --secondary-hover: rgba(255, 255, 255, 0.3); }
 .step-2 { --hero-bg: #f9ab00; --hero-fg: #1f1f1f; --hero-chip-bg: rgba(31, 31, 31, 0.08); --hero-chip-border: rgba(31, 31, 31, 0.16);
-          --tray-bg: #feefc3; --primary-bg: #1f1f1f; --primary-hover: #3c4043; --primary-fg: #ffffff; }
+          --card-divider: rgba(31, 31, 31, 0.12); --primary-bg: #1f1f1f; --primary-hover: #3c4043; --primary-fg: #ffffff;
+          --secondary-bg: rgba(31, 31, 31, 0.08); --secondary-border: rgba(31, 31, 31, 0.18); --secondary-fg: #1f1f1f; --secondary-hover: rgba(31, 31, 31, 0.15); }
 .step-3 { --hero-bg: #a8dab5; --hero-fg: #1f1f1f; --hero-chip-bg: rgba(31, 31, 31, 0.08); --hero-chip-border: rgba(31, 31, 31, 0.16);
-          --tray-bg: #ceead6; --primary-bg: #137333; --primary-hover: #0d5224; --primary-fg: #ffffff; }
+          --card-divider: rgba(31, 31, 31, 0.12); --primary-bg: #137333; --primary-hover: #0d5224; --primary-fg: #ffffff;
+          --secondary-bg: rgba(31, 31, 31, 0.08); --secondary-border: rgba(31, 31, 31, 0.18); --secondary-fg: #1f1f1f; --secondary-hover: rgba(31, 31, 31, 0.15); }
 .step-4 { --hero-bg: #f28b82; --hero-fg: #1f1f1f; --hero-chip-bg: rgba(31, 31, 31, 0.08); --hero-chip-border: rgba(31, 31, 31, 0.16);
-          --tray-bg: #fad2cf; --primary-bg: #c5221f; --primary-hover: #9e1a17; --primary-fg: #ffffff; }
+          --card-divider: rgba(31, 31, 31, 0.12); --primary-bg: #c5221f; --primary-hover: #9e1a17; --primary-fg: #ffffff;
+          --secondary-bg: rgba(31, 31, 31, 0.08); --secondary-border: rgba(31, 31, 31, 0.18); --secondary-fg: #1f1f1f; --secondary-hover: rgba(31, 31, 31, 0.15); }
 
 /* 다크: 모든 단계가 진한 배경 + 흰 글자 (대비 ≥ 5:1) */
 @media (prefers-color-scheme: dark) {
@@ -609,22 +604,30 @@ button {
     --hero-fg: #ffffff;
     --hero-chip-bg: rgba(255, 255, 255, 0.2);
     --hero-chip-border: rgba(255, 255, 255, 0.35);
-    --primary-fg: #ffffff;
+    --card-divider: rgba(255, 255, 255, 0.16);
+    --primary-bg: #ffffff;
+    --primary-hover: #e8eaed;
+    --secondary-bg: rgba(255, 255, 255, 0.16);
+    --secondary-border: rgba(255, 255, 255, 0.28);
+    --secondary-fg: #ffffff;
+    --secondary-hover: rgba(255, 255, 255, 0.26);
   }
-  .step-1 { --hero-bg: #174ea6; --tray-bg: #0f1f33; --primary-bg: #1967d2; --primary-hover: #1a73e8; }
-  .step-2 { --hero-bg: #a35d00; --tray-bg: #2d1c07; --primary-bg: #b06000; --primary-hover: #c26a00; }
-  .step-3 { --hero-bg: #137333; --tray-bg: #0f2416; --primary-bg: #1e8e3e; --primary-hover: #188038; }
-  .step-4 { --hero-bg: #c5221f; --tray-bg: #2d0f0f; --primary-bg: #d93025; --primary-hover: #b3261e; }
+  .step-1 { --hero-bg: #174ea6; --primary-fg: #174ea6; }
+  .step-2 { --hero-bg: #a35d00; --primary-fg: #a35d00; }
+  .step-3 { --hero-bg: #137333; --primary-fg: #137333; }
+  .step-4 { --hero-bg: #c5221f; --primary-fg: #c5221f; }
 }
 
 .drift-card {
-  border-radius: 20px;
+  border-radius: 18px;
   overflow: hidden;
   box-shadow: var(--shadow-card);
   transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
   display: flex;
   flex-direction: column;
-  background: var(--bg-surface);
+  background: var(--hero-bg);
+  color: var(--hero-fg);
+  padding: 13px 15px 11px;
 }
 
 .drift-card:hover {
@@ -632,12 +635,10 @@ button {
   box-shadow: var(--shadow-card-hover);
 }
 
-.card-hero {
-  padding: 16px 18px 12px;
-  display: flex;
-  flex-direction: column;
-  background: var(--hero-bg);
-  color: var(--hero-fg);
+/* 카드 전체가 단계 색이므로 전역 포커스 링(파랑)은 1단계 카드 위에서 보이지 않음 →
+   카드 안에서는 카드 글자색(배경 대비 ≥ 5:1)을 포커스 링으로 사용 */
+.drift-card :focus-visible {
+  outline-color: var(--hero-fg);
 }
 
 .card-step-badge-row {
@@ -648,10 +649,10 @@ button {
 }
 
 .card-step-badge {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  opacity: 0.85;
+  opacity: 0.88;
 }
 
 .card-scope-badge {
@@ -667,82 +668,78 @@ button {
 }
 
 .card-headline {
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1.3;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   letter-spacing: -0.3px;
   word-break: keep-all;
 }
 
 .card-desc {
-  font-size: 13.5px;
-  line-height: 1.5;
+  font-size: 12.5px;
+  line-height: 1.48;
   margin-bottom: 2px;
   word-break: keep-all;
-  opacity: 0.95;
+  opacity: 0.94;
 }
 
-.card-tray {
-  padding: 12px 14px 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  background: var(--tray-bg);
-}
-
-.card-actions {
+/* 본문 인라인 우측 컴팩트 액션 바 */
+.card-actions-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--card-divider);
 }
 
 .btn-dock {
-  flex: 0 0 38px;
-  width: 38px;
-  height: 38px;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 1px solid var(--dock-btn-border);
-  background: var(--dock-btn-bg);
-  color: var(--dock-btn-fg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+  border: 1px solid var(--secondary-border);
+  background: var(--secondary-bg);
+  color: var(--secondary-fg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .btn-dock:hover {
-  transform: translateY(-2px) scale(1.08);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px) scale(1.1);
+  background: var(--secondary-hover);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 .btn-dock:active {
-  transform: translateY(0) scale(0.96);
+  transform: translateY(0) scale(0.95);
 }
 
 .btn-dock[aria-expanded="true"] {
-  box-shadow: inset 0 0 0 2px var(--primary-bg);
+  box-shadow: inset 0 0 0 2px var(--hero-fg);
 }
 
 .btn-dock-primary {
   background: var(--primary-bg);
   color: var(--primary-fg);
   border-color: var(--primary-bg);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .btn-dock-primary:hover {
   background: var(--primary-hover);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .dock-icon {
-  font-size: 17px;
+  font-size: 13px;
   line-height: 1;
   display: inline-block;
 }
@@ -757,32 +754,46 @@ button {
   width: 100%;
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px dashed var(--border-default);
-  justify-content: center;
+  border-top: 1px dashed var(--card-divider);
+  justify-content: flex-start;
 }
 
 .phrase-pill {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  color: var(--text-primary);
-  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #1f1f1f;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .phrase-pill:hover {
-  background: var(--bg-tinted);
-  border-color: var(--accent-text);
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
 }
 
 .phrase-loading {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--hero-fg);
+  opacity: 0.85;
   font-style: italic;
   padding: 4px 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .phrase-pill {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+  }
+  .phrase-pill:hover {
+    background: rgba(0, 0, 0, 0.55);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
 }
 
 /* ==========================================================================
@@ -826,7 +837,8 @@ button {
   }
   .drift-card:hover,
   .btn-dock:hover,
-  .btn-dock:active {
+  .btn-dock:active,
+  .phrase-pill:hover {
     transform: none;
   }
   .chrome-spinner {

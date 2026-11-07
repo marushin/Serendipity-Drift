@@ -207,28 +207,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     card.className = `drift-card step-${rank}`;
 
     card.innerHTML = `
-      <div class="card-hero">
-        <div class="card-step-badge-row">
-          <span class="card-step-badge">${rank}단계 · ${escapeHtml(item.distance || `${rank * 25}%`)}</span>
-          ${item.scope ? `<span class="card-scope-badge">${escapeHtml(item.scope)}</span>` : ''}
-        </div>
-        <h2 class="card-headline">${escapeHtml(item.query)}</h2>
-        <p class="card-desc">${escapeHtml(item.explanation)}</p>
+      <div class="card-step-badge-row">
+        <span class="card-step-badge">${rank}단계 · ${escapeHtml(item.distance || `${rank * 25}%`)}</span>
+        ${item.scope ? `<span class="card-scope-badge">${escapeHtml(item.scope)}</span>` : ''}
       </div>
-      <div class="card-tray">
-        <div class="card-actions">
-          <button type="button" class="btn-dock btn-dock-primary search-chrome-btn" title="크롬 검색창으로 검색" aria-label="'${escapeHtml(item.query)}' 구글에서 검색">
-            <span class="dock-icon" aria-hidden="true">🔍</span>
-          </button>
-          <button type="button" class="btn-dock branch-btn" title="이 조각으로 도약" aria-label="'${escapeHtml(item.query)}'(으)로 도약">
-            <span class="dock-icon" aria-hidden="true">🌱</span>
-          </button>
-          <button type="button" class="btn-dock deconstruct-btn" title="구절 분해" aria-label="설명 구절 분해" aria-expanded="false">
-            <span class="dock-icon" aria-hidden="true">✂️</span>
-          </button>
-        </div>
-        <div class="phrase-drawer" hidden></div>
+      <h2 class="card-headline">${escapeHtml(item.query)}</h2>
+      <p class="card-desc">${escapeHtml(item.explanation)}</p>
+      <div class="card-actions-bar">
+        <button type="button" class="btn-dock btn-dock-primary search-chrome-btn" title="크롬 검색창으로 검색" aria-label="'${escapeHtml(item.query)}' 구글에서 검색">
+          <span class="dock-icon" aria-hidden="true">🔍</span>
+        </button>
+        <button type="button" class="btn-dock branch-btn" title="이 조각으로 도약" aria-label="'${escapeHtml(item.query)}'(으)로 도약">
+          <span class="dock-icon" aria-hidden="true">🌱</span>
+        </button>
+        <button type="button" class="btn-dock deconstruct-btn" title="구절 분해" aria-label="설명 구절 분해" aria-expanded="false">
+          <span class="dock-icon" aria-hidden="true">✂️</span>
+        </button>
       </div>
+      <div class="phrase-drawer" hidden></div>
     `;
 
     card.querySelector('.search-chrome-btn').addEventListener('click', () => {

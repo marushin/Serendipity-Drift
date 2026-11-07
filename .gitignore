@@ -32,3 +32,6 @@ desktop.ini
 *.log
 .env
 .env.*
+
+# 소개 영상 제작용 자료 (레포에 올리지 않음)
+desc/

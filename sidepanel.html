@@ -68,6 +68,12 @@
         </button>
       </div>
 
+      <div class="mode-toggle" role="radiogroup" aria-label="결과 보기 방식">
+        <button type="button" class="mode-btn" role="radio" data-mode="image" aria-checked="true">🖼️ 이미지</button>
+        <button type="button" class="mode-btn" role="radio" data-mode="video" aria-checked="false">🎬 동영상</button>
+        <button type="button" class="mode-btn" role="radio" data-mode="text" aria-checked="false">📝 텍스트</button>
+      </div>
+
       <div class="action-row">
         <button type="button" id="run-drift-btn" class="btn btn-primary">
           <span class="btn-icon" aria-hidden="true">⚡</span>
@@ -135,6 +141,16 @@
       </div>
     </footer>
   </div>
+
+  <!-- 이미지 확대 보기 -->
+  <dialog id="lightbox" class="lightbox" aria-label="이미지 확대 보기">
+    <button type="button" class="lightbox-close" aria-label="닫기">✕</button>
+    <img class="lightbox-img" alt="">
+    <div class="lightbox-meta">
+      <p class="lightbox-title"></p>
+      <a class="lightbox-source" target="_blank" rel="noopener noreferrer">원본 페이지 ↗</a>
+    </div>
+  </dialog>
 
   <script type="module" src="sidepanel.js"></script>
 </body>

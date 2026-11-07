@@ -58,7 +58,10 @@ chrome_extension/
 - **세션**: 시스템 프롬프트별 베이스 세션을 캐시하고 요청마다 `clone()` 한 1회용 세션을 사용·파기합니다.
 - **캐시**: Gemini Nano 결과만 메모리 LRU(60개)에 보관하며, 폴백 결과는 캐시하지 않습니다. 탐색 기록은 저장하지 않습니다.
 - **테마**: 모든 색은 CSS 토큰으로만 정의하고 다크 모드는 토큰만 덮어씁니다. 배경용(`*-fill`)과 글자용(`*-text`) 색을 분리해 대비(WCAG AA)를 보장합니다. 구글 페이지 위젯은 OS 설정이 아니라 **구글 페이지 자체의 테마**를 따릅니다.
-- **권한**: `sidePanel`, `storage`, `tabs`, `offscreen`만 사용하며, 콘텐츠 스크립트는 `www.google.com` / `www.google.co.kr`의 홈·검색 페이지에만 주입됩니다.
+- **이미지 모드 (2.0)**: 단계별 비틀린 키워드마다 썸네일 4장을 보여줍니다. Google 이미지는 JS 실행 없이 결과를 주지 않으므로, `src/image-search.js`가 Bing 이미지 검색 HTML의 결과 타일(`a.iusc`의 `m` 메타데이터)을 API 키 없이 파싱합니다. 결과는 메모리 LRU(120개)에 캐시합니다. 썸네일 클릭 → 확대 보기(`<dialog>`) → "원본 페이지 ↗".
+- **동영상 모드 (2.0)**: 단계별 키워드마다 YouTube 영상 4개(16:9 썸네일 + 재생 시간)를 보여줍니다. `src/video-search.js`가 YouTube 검색 결과 HTML의 `ytInitialData`에서 `videoRenderer`를 API 키 없이 추출합니다. 확장 페이지 안 임베드는 YouTube가 막으므로(오류 153) 썸네일 클릭 시 본창에서 재생합니다.
+- **본창 = 보는 화면**: 0단계(원래 검색어의 구글 이미지 `udm=2` / 동영상 `udm=7` 결과), 동영상 재생, 이미지 "원본 페이지 ↗"는 모두 본창에 띄웁니다. 구글·YouTube·새 탭, 그리고 확장이 직전에 연 탭은 그 자리에서 바꾸고, 다른 사이트를 보고 있으면 새 탭으로 엽니다.
+- **권한**: `sidePanel`, `storage`, `tabs`, `offscreen`과 미디어 검색용 호스트 권한 `https://www.bing.com/*`, `https://www.youtube.com/*`을 사용하며, 콘텐츠 스크립트는 `www.google.com` / `www.google.co.kr`의 홈·검색 페이지에만 주입됩니다.
 
 ## 🧪 개발
 

@@ -3,6 +3,8 @@ import { DEFAULT_VECTOR_ID, pickRandomVector, findVector } from './src/vectors.j
 import { storage } from './src/storage.js';
 import { LruCache } from './src/lru-cache.js';
 import { googleSearchUrl } from './src/utils.js';
+import { fetchImages } from './src/image-search.js';
+import { fetchVideos } from './src/video-search.js';
 
 /* ------------------------------------------------------------------ */
 /* 0. 엔진 호스트 선택                                                   */
@@ -92,7 +94,36 @@ async function runDrift({ query, directionId, fresh = false }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* 3. 크롬 주소창 (Omnibox)                                             */
+/* 2-1. 미디어 검색 (API 키 없음) + 캐시                                  */
+/*      image: Bing 이미지 HTML / video: YouTube 검색 HTML               */
+/*      같은 검색어의 동시 요청은 하나의 Promise 를 공유합니다.            */
+/* ------------------------------------------------------------------ */
+
+const MEDIA_FETCHERS = { image: fetchImages, video: fetchVideos };
+const mediaCache = new LruCache(200);
+const mediaInflight = new Map();
+
+async function getMedia(kind, query, limit = 4) {
+  const fetcher = MEDIA_FETCHERS[kind];
+  if (!fetcher) throw new Error(`알 수 없는 미디어 종류: ${kind}`);
+  const q = (query || '').trim();
+  if (!q) throw new Error('검색어가 비어있습니다.');
+  const key = `${kind}\u0000${limit}\u0000${q}`;
+  if (mediaCache.has(key)) return mediaCache.get(key);
+  if (mediaInflight.has(key)) return mediaInflight.get(key);
+
+  const p = fetcher(q, { limit, signal: AbortSignal.timeout(12000) })
+    .then((items) => {
+      if (items.length) mediaCache.set(key, items);
+      return items;
+    })
+    .finally(() => mediaInflight.delete(key));
+  mediaInflight.set(key, p);
+  return p;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. 크롬 주소창 (Omnibox)                                           */
 /* ------------------------------------------------------------------ */
 
 let omniboxDebounceTimer = null;
@@ -195,6 +226,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     case 'RUN_DRIFT':
       return respond(runDrift(request.data || {}), sendResponse);
+
+    case 'FETCH_MEDIA':
+      return respond(getMedia(request.kind, request.query, request.limit), sendResponse);
 
     case 'DECONSTRUCT_PHRASES':
       return respond(callEngine('deconstructSentenceToPhrases', request.sentence), sendResponse);

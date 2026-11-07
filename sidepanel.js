@@ -5,6 +5,22 @@ import { escapeHtml, googleSearchUrl } from './src/utils.js';
 let trailHistory = [];
 /** 진행 중인 비틀기 요청 식별자 — 늦게 도착한 이전 응답이 화면을 덮어쓰지 않도록 */
 let driftToken = 0;
+/** 마지막 비틀기 결과 — 보기 방식을 바꿀 때 다시 요청하지 않고 다시 그림 */
+let lastDrift = null;
+
+const MODE_KEY = 'sd-view-mode';
+const MEDIA_PER_STEP = 4;
+/** 미디어 모드별 구글 검색 탭 (udm=2 이미지, udm=7 동영상) — 텍스트 모드는 없음 */
+const GOOGLE_UDM = { image: '2', video: '7' };
+let viewMode = 'image';
+try {
+  const saved = localStorage.getItem(MODE_KEY);
+  if (saved === 'text' || saved in GOOGLE_UDM) viewMode = saved;
+} catch (_) {}
+
+const isMediaMode = (mode) => mode in GOOGLE_UDM;
+const googleTabSearchUrl = (q, mode) =>
+  isMediaMode(mode) ? `${googleSearchUrl(q)}&udm=${GOOGLE_UDM[mode]}` : googleSearchUrl(q);
 
 document.addEventListener('DOMContentLoaded', async () => {
   const $ = (id) => document.getElementById(id);
@@ -29,6 +45,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const trailItems = $('trail-items');
   const clearTrailBtn = $('clear-trail-btn');
   const openFlagsGuide = $('open-flags-guide');
+  const modeButtons = document.querySelectorAll('.mode-btn');
+  const lightbox = $('lightbox');
+  const lightboxImg = lightbox.querySelector('.lightbox-img');
+  const lightboxTitle = lightbox.querySelector('.lightbox-title');
+  const lightboxSource = lightbox.querySelector('.lightbox-source');
 
   const myWindowId = (await chrome.windows.getCurrent()).id;
 
@@ -130,6 +151,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (queryInput.value !== msg.query) queryInput.value = msg.query;
   });
 
+  // 4-1. 보기 방식 (이미지 / 텍스트)
+  function applyMode(mode) {
+    viewMode = mode;
+    modeButtons.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.mode === mode)));
+    try { localStorage.setItem(MODE_KEY, mode); } catch (_) {}
+    if (lastDrift && !cardStack.hidden) renderDriftResult(lastDrift);
+  }
+  modeButtons.forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.mode !== viewMode) applyMode(b.dataset.mode);
+  }));
+  applyMode(viewMode);
+
   // 5. 벡터 셔플
   randomVectorBtn.addEventListener('click', () => {
     vectorSelect.value = pickRandomVector().id;
@@ -149,8 +182,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Enter' && !e.isComposing) runDriftBtn.click();
   });
 
+  // 6-1. 본창 — 사이드바는 탐색, 본창은 보는 화면
+  //      다음 탭은 그 자리에서 바꾸고, 그 밖의 사이트를 보고 있으면 작업을 덮지 않도록 새 탭으로 엶:
+  //      구글·YouTube·새 탭, 그리고 이 확장이 직전에 열었던 탭(탭이 쌓이지 않도록)
+  const GOOGLE_HOST_RE = /^www\.google\.(?:com|co\.kr)$/;
+  const REUSABLE_HOST_RE = /^(?:www\.google\.(?:com|co\.kr)|(?:www|m)\.youtube\.com)$/;
+  const NEW_TAB_RE = /^chrome:\/\/(?:newtab|new-tab-page)\//;
+  let ownedTabId = null;
+
+  /**
+   * @param {(current: URL|null) => string|null} buildUrl  현재 본창 URL 을 보고 열 주소를 결정 (null 이면 건너뜀)
+   */
+  async function openInMainWindow(buildUrl) {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, windowId: myWindowId });
+      let current = null;
+      try { current = tab?.url ? new URL(tab.url) : null; } catch (_) {}
+
+      const url = buildUrl(current);
+      if (!url) return;
+
+      const reusable = tab && (
+        tab.id === ownedTabId
+        || !tab.url
+        || NEW_TAB_RE.test(tab.url)
+        || (current && REUSABLE_HOST_RE.test(current.hostname))
+      );
+      const target = reusable
+        ? await chrome.tabs.update(tab.id, { url })
+        : await chrome.tabs.create({ url, windowId: myWindowId });
+      if (target?.id != null) ownedTabId = target.id;
+    } catch (e) {
+      console.warn('Main window navigation failed:', e);
+    }
+  }
+
+  // 0단계: 원래 검색어의 정확한 결과를 본창의 구글 이미지/동영상 탭에 띄움
+  function showStepZero(query, mode) {
+    const udm = GOOGLE_UDM[mode];
+    return openInMainWindow((current) => {
+      const onGoogle = current && GOOGLE_HOST_RE.test(current.hostname);
+      if (onGoogle && current.pathname === '/search'
+          && current.searchParams.get('q') === query && current.searchParams.get('udm') === udm) {
+        return null; // 이미 같은 결과를 보고 있음
+      }
+      // 사용자가 쓰던 구글 도메인(.com / .co.kr)을 유지
+      return onGoogle
+        ? `${current.origin}/search?q=${encodeURIComponent(query)}&udm=${udm}`
+        : googleTabSearchUrl(query, mode);
+    });
+  }
+
   async function executeDrift(query, vectorId, { fresh = false } = {}) {
     const token = ++driftToken;
+    if (isMediaMode(viewMode)) showStepZero(query, viewMode);
 
     loadingMessage.textContent = modelStatus === 'ready'
       ? 'Gemini Nano가 사유의 틈새를 직조하는 중...'
@@ -179,6 +264,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    lastDrift = response.data;
     renderDriftResult(response.data);
     showView('result');
     updateTrail(query);
@@ -203,18 +289,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function createCard(item) {
     const rank = item.rank || 1;
+    const mode = viewMode;
+    const isMedia = isMediaMode(mode);
+    const mediaLabel = mode === 'video' ? '동영상' : '이미지';
     const card = document.createElement('article');
-    card.className = `drift-card step-${rank}`;
+    card.className = `drift-card step-${rank}${isMedia ? ` is-media-mode is-${mode}-mode` : ''}`;
+
+    const header = isMedia
+      ? `<div class="card-step-badge-row">
+          <span class="card-step-badge">${rank}단계</span>
+          <h2 class="card-keyword" title="${escapeHtml(item.explanation)}">${escapeHtml(item.query)}</h2>
+        </div>
+        <div class="thumb-grid" aria-label="'${escapeHtml(item.query)}' ${mediaLabel} 검색 결과" aria-busy="true"></div>`
+      : `<div class="card-step-badge-row">
+          <span class="card-step-badge">${rank}단계 · ${escapeHtml(item.distance || `${rank * 25}%`)}</span>
+          ${item.scope ? `<span class="card-scope-badge">${escapeHtml(item.scope)}</span>` : ''}
+        </div>
+        <h2 class="card-headline">${escapeHtml(item.query)}</h2>
+        <p class="card-desc">${escapeHtml(item.explanation)}</p>`;
 
     card.innerHTML = `
-      <div class="card-step-badge-row">
-        <span class="card-step-badge">${rank}단계 · ${escapeHtml(item.distance || `${rank * 25}%`)}</span>
-        ${item.scope ? `<span class="card-scope-badge">${escapeHtml(item.scope)}</span>` : ''}
-      </div>
-      <h2 class="card-headline">${escapeHtml(item.query)}</h2>
-      <p class="card-desc">${escapeHtml(item.explanation)}</p>
+      ${header}
       <div class="card-actions-bar">
-        <button type="button" class="btn-dock btn-dock-primary search-chrome-btn" title="크롬 검색창으로 검색" aria-label="'${escapeHtml(item.query)}' 구글에서 검색">
+        <button type="button" class="btn-dock btn-dock-primary search-chrome-btn" title="${isMedia ? `구글 ${mediaLabel}에서 더 보기` : '크롬 검색창으로 검색'}" aria-label="'${escapeHtml(item.query)}' 구글에서 검색">
           <span class="dock-icon" aria-hidden="true">🔍</span>
         </button>
         <button type="button" class="btn-dock branch-btn" title="이 조각으로 도약" aria-label="'${escapeHtml(item.query)}'(으)로 도약">
@@ -228,8 +325,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
 
     card.querySelector('.search-chrome-btn').addEventListener('click', () => {
-      chrome.tabs.create({ url: googleSearchUrl(item.query) });
+      chrome.tabs.create({ url: googleTabSearchUrl(item.query, mode) });
     });
+
+    if (isMedia) loadThumbs(card.querySelector('.thumb-grid'), item.query, mode);
 
     card.querySelector('.branch-btn').addEventListener('click', () => {
       queryInput.value = item.query;
@@ -292,6 +391,96 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     return card;
   }
+
+  // 7-1. 단계별 썸네일 (image: 정사각형, video: 16:9 + 재생 시간)
+  async function loadThumbs(grid, query, kind) {
+    const isVideo = kind === 'video';
+    const thumbClass = isVideo ? 'thumb thumb-video' : 'thumb';
+    grid.replaceChildren(...Array.from({ length: MEDIA_PER_STEP }, () => {
+      const s = document.createElement('div');
+      s.className = `${thumbClass} thumb-skeleton`;
+      return s;
+    }));
+
+    let items = [];
+    try {
+      const res = await chrome.runtime.sendMessage({ type: 'FETCH_MEDIA', kind, query, limit: MEDIA_PER_STEP });
+      items = res?.success ? res.data : [];
+    } catch (_) {}
+    if (!grid.isConnected) return; // 그새 다시 그려졌으면 폐기
+
+    grid.removeAttribute('aria-busy');
+    if (!items.length) {
+      const msg = document.createElement('p');
+      msg.className = 'thumb-empty';
+      msg.textContent = isVideo ? '동영상을 불러오지 못했습니다.' : '이미지를 불러오지 못했습니다.';
+      grid.replaceChildren(msg);
+      return;
+    }
+
+    grid.replaceChildren(...items.map((item) => {
+      const label = item.title || query;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = thumbClass;
+      btn.title = isVideo && item.channel ? `${label}\n— ${item.channel}` : label;
+      btn.setAttribute('aria-label', `${isVideo ? '본창에서 재생' : '확대 보기'}: ${label}`);
+
+      const el = document.createElement('img');
+      el.src = item.thumb;
+      el.alt = '';
+      el.loading = 'lazy';
+      el.decoding = 'async';
+      el.referrerPolicy = 'no-referrer';
+      el.addEventListener('error', () => btn.remove(), { once: true });
+      btn.appendChild(el);
+
+      if (isVideo) {
+        const badge = document.createElement('span');
+        badge.className = 'thumb-duration';
+        badge.setAttribute('aria-hidden', 'true');
+        badge.textContent = item.duration || 'LIVE';
+        btn.appendChild(badge);
+      }
+
+      // 동영상: 확장 페이지 안 임베드는 YouTube 가 막으므로(오류 153) 본창에서 재생
+      btn.addEventListener('click', () => {
+        if (isVideo) openInMainWindow(() => item.page);
+        else openLightbox(item);
+      });
+      return btn;
+    }));
+  }
+
+  // 7-2. 이미지 확대 보기 (원본이 막히면 썸네일로 폴백)
+  function openLightbox(item) {
+    lightboxImg.onerror = () => {
+      lightboxImg.onerror = null;
+      lightboxImg.src = item.thumb;
+    };
+    lightboxImg.src = item.full || item.thumb;
+    lightboxImg.alt = item.title || '';
+    lightboxTitle.textContent = item.title || '';
+    lightboxSource.hidden = !item.page;
+    if (item.page) lightboxSource.href = item.page;
+    lightbox.showModal();
+  }
+
+  // "원본 페이지 ↗" — 일반 클릭은 본창으로, Ctrl/Shift/가운데 클릭은 브라우저 기본(새 탭/창)
+  lightboxSource.addEventListener('click', (e) => {
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    const href = lightboxSource.href;
+    lightbox.close();
+    openInMainWindow(() => href);
+  });
+
+  lightbox.querySelector('.lightbox-close').addEventListener('click', () => lightbox.close());
+  // 배경(다이얼로그 바깥 여백) 클릭 시 닫기
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) lightbox.close();
+  });
+  lightbox.addEventListener('close', () => lightboxImg.removeAttribute('src'));
 
   // 8. 탐색 궤적 — 패널이 열려 있는 동안만 메모리에 유지
   function updateTrail(query) {

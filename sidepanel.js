@@ -217,9 +217,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 0단계: 원래 검색어의 정확한 결과를 본창의 구글 이미지/동영상 탭에 띄움
+  // 0단계: 원래 검색어의 정확한 결과를 본창의 구글 웹/이미지/동영상 탭에 띄움
   function showStepZero(query, mode) {
-    const udm = GOOGLE_UDM[mode];
+    const udm = GOOGLE_UDM[mode] ?? null; // 텍스트 모드는 일반 웹 검색(udm 없음)
     return openInMainWindow((current) => {
       const onGoogle = current && GOOGLE_HOST_RE.test(current.hostname);
       if (onGoogle && current.pathname === '/search'
@@ -228,14 +228,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       // 사용자가 쓰던 구글 도메인(.com / .co.kr)을 유지
       return onGoogle
-        ? `${current.origin}/search?q=${encodeURIComponent(query)}&udm=${udm}`
+        ? `${current.origin}/search?q=${encodeURIComponent(query)}${udm ? `&udm=${udm}` : ''}`
         : googleTabSearchUrl(query, mode);
     });
   }
 
   async function executeDrift(query, vectorId, { fresh = false } = {}) {
     const token = ++driftToken;
-    if (isMediaMode(viewMode)) showStepZero(query, viewMode);
+    showStepZero(query, viewMode);
 
     loadingMessage.textContent = modelStatus === 'ready'
       ? 'Gemini Nano가 사유의 틈새를 직조하는 중...'

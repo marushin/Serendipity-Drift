@@ -407,8 +407,9 @@
     const q = extractSearchQuery();
     if (!q) return;
 
-    // 이미지·동영상 탭은 사이드패널이 열려 있으면 생략 (사이드패널이 이미 같은 결과를 보여줌)
-    if (kind !== 'web' && await isSidePanelOpen()) {
+    // 사이드패널이 열려 있으면 위젯 생략: 비틀기는 사이드패널이 맡고 본창은 0단계(원래 검색 결과)만 보여줌.
+    // (위젯까지 돌리면 같은 검색어로 비틀기를 한 번 더 하게 되고 결과도 사이드패널과 달라짐)
+    if (await isSidePanelOpen()) {
       removeDriftBar();
       return;
     }

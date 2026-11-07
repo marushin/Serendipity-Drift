@@ -1,91 +1,50 @@
 /**
- * 로컬 스토리지 및 세션 히스토리 관리
- * 검색어 비틀기 기록, 브랜치 트리 및 사용자 설정 저장
+ * 사용자 설정 저장소 (chrome.storage.local)
+ *
+ * 탐색 기록은 개인정보 보호와 저장 공간을 위해 더 이상 영구 저장하지 않습니다.
+ * (사이드패널의 '사유의 궤적'은 패널이 열려 있는 동안 메모리에만 유지됩니다.)
+ *
+ * ⚠️ content.js 는 ES 모듈을 import 할 수 없어 SETTINGS_KEY 와 기본값을 직접 복제해 사용합니다.
+ *    키나 기본값을 바꾸면 content.js 의 같은 상수도 함께 수정하세요.
  */
 
-const HISTORY_KEY = 'serendipity_drift_history';
-const SETTINGS_KEY = 'serendipity_drift_settings';
+export const SETTINGS_KEY = 'serendipity_drift_settings';
+
+export const DEFAULT_SETTINGS = Object.freeze({
+  /** 구글 검색 결과 페이지에서 비틀기를 자동 실행할지 여부 (false 면 버튼을 눌러야 실행) */
+  autoRun: true
+});
+
+/** 이전 버전이 남긴, 더 이상 쓰지 않는 키 */
+const LEGACY_KEY_PREFIXES = ['drift_search_'];
+const LEGACY_KEYS = ['serendipity_drift_history'];
 
 export const storage = {
-  /**
-   * 사용자 설정 가져오기
-   */
   async getSettings() {
     try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        const data = await chrome.storage.local.get(SETTINGS_KEY);
-        return Object.assign({
-          autoDetect: true,
-          preferredVector: 'category',
-          resultsPerStage: 2,
-          driftIntensity: 'progressive' // 'gentle' | 'progressive' | 'radical'
-        }, data[SETTINGS_KEY] || {});
-      }
-    } catch (_) {}
-    return {
-      autoDetect: true,
-      preferredVector: 'category',
-      resultsPerStage: 2,
-      driftIntensity: 'progressive'
-    };
-  },
-
-  /**
-   * 사용자 설정 저장
-   */
-  async saveSettings(newSettings) {
-    try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        const current = await this.getSettings();
-        await chrome.storage.local.set({ [SETTINGS_KEY]: { ...current, ...newSettings } });
-      }
-    } catch (_) {}
-  },
-
-  /**
-   * 탐색 히스토리 가져오기
-   */
-  async getHistory() {
-    try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        const data = await chrome.storage.local.get(HISTORY_KEY);
-        return data[HISTORY_KEY] || [];
-      }
-    } catch (_) {}
-    return [];
-  },
-
-  /**
-   * 히스토리에 새 드리프트 세션 추가
-   */
-  async addHistoryEntry(entry) {
-    try {
-      const history = await this.getHistory();
-      const newEntry = {
-        id: 'drift_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-        timestamp: Date.now(),
-        ...entry
-      };
-      // 최근 50개 유지
-      const updated = [newEntry, ...history].slice(0, 50);
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        await chrome.storage.local.set({ [HISTORY_KEY]: updated });
-      }
-      return newEntry;
-    } catch (err) {
-      console.warn('[Storage] Failed to add history:', err);
+      const data = await chrome.storage.local.get(SETTINGS_KEY);
+      return { ...DEFAULT_SETTINGS, ...(data[SETTINGS_KEY] || {}) };
+    } catch (_) {
+      return { ...DEFAULT_SETTINGS };
     }
   },
 
+  async saveSettings(patch) {
+    const current = await this.getSettings();
+    const next = { ...current, ...patch };
+    await chrome.storage.local.set({ [SETTINGS_KEY]: next });
+    return next;
+  },
+
   /**
-   * 히스토리 초기화
+   * 구버전의 무제한 검색 캐시(drift_search_*)와 탐색 기록을 정리합니다.
    */
-  async clearHistory() {
-    try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        await chrome.storage.local.remove(HISTORY_KEY);
-      }
-    } catch (_) {}
+  async removeLegacyData() {
+    const all = await chrome.storage.local.get(null);
+    const stale = Object.keys(all).filter(
+      (k) => LEGACY_KEYS.includes(k) || LEGACY_KEY_PREFIXES.some((p) => k.startsWith(p))
+    );
+    if (stale.length > 0) await chrome.storage.local.remove(stale);
+    return stale.length;
   }
 };
-

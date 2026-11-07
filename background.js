@@ -1,77 +1,105 @@
 import { nanoEngine } from './src/nano-engine.js';
-import { searchFetcher } from './src/search-fetcher.js';
-import { DRIFT_VECTORS, DEFAULT_VECTOR_ID, pickRandomVector, findVector } from './src/vectors.js';
+import { DEFAULT_VECTOR_ID, pickRandomVector, findVector } from './src/vectors.js';
 import { storage } from './src/storage.js';
+import { LruCache } from './src/lru-cache.js';
+import { googleSearchUrl } from './src/utils.js';
 
-// 설치 시 초기화 및 사이드패널 동작 설정
-chrome.runtime.onInstalled.addListener(() => {
-  console.log('[Serendipity Drift] Extension installed.');
-  try {
-    if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
-      chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
-    }
-  } catch (_) {}
+/* ------------------------------------------------------------------ */
+/* 0. 엔진 호스트 선택                                                   */
+/*    Prompt API 가 서비스 워커에 노출되면 직접 사용하고, 그렇지 않으면     */
+/*    오프스크린 문서(window 컨텍스트)에서 실행합니다.                      */
+/* ------------------------------------------------------------------ */
+
+const ENGINE_IN_WORKER = nanoEngine.isApiExposed();
+const OFFSCREEN_URL = 'offscreen.html';
+let creatingOffscreen = null;
+
+async function ensureOffscreenDocument() {
+  const contexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: [chrome.runtime.getURL(OFFSCREEN_URL)]
+  });
+  if (contexts.length > 0) return;
+
+  if (!creatingOffscreen) {
+    creatingOffscreen = chrome.offscreen
+      .createDocument({
+        url: OFFSCREEN_URL,
+        reasons: ['DOM_PARSER'],
+        justification: 'Chrome 내장 Prompt API(Gemini Nano)는 문서 컨텍스트에서만 노출되는 경우가 있어 숨은 문서에서 실행합니다.'
+      })
+      .finally(() => { creatingOffscreen = null; });
+  }
+  await creatingOffscreen;
+}
+
+async function callEngine(method, ...args) {
+  if (ENGINE_IN_WORKER) {
+    return nanoEngine[method](...args);
+  }
+  await ensureOffscreenDocument();
+  const res = await chrome.runtime.sendMessage({ target: 'offscreen', type: 'ENGINE_CALL', method, args });
+  if (!res || !res.ok) throw new Error(res?.error || '엔진 호스트가 응답하지 않습니다.');
+  return res.value;
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. 설치/업데이트                                                     */
+/* ------------------------------------------------------------------ */
+
+chrome.runtime.onInstalled.addListener(async () => {
+  chrome.sidePanel?.setPanelBehavior?.({ openPanelOnActionClick: false }).catch(() => {});
 
   chrome.omnibox.setDefaultSuggestion({
     description: '🌐 Chrome AI 비틀린 검색: <match>%s</match> 의도에서 조금 벗어난 사유로 검색'
   });
+
+  try {
+    const removed = await storage.removeLegacyData();
+    if (removed > 0) console.info(`[Serendipity Drift] 구버전 캐시/기록 ${removed}개를 정리했습니다.`);
+  } catch (err) {
+    console.warn('[Serendipity Drift] Legacy cleanup failed:', err);
+  }
 });
+
+/* ------------------------------------------------------------------ */
+/* 2. 비틀기 파이프라인 + 결과 캐시                                       */
+/*    - Gemini Nano 결과만 캐시합니다 (폴백 결과는 모델이 준비되면 바뀌어야 함). */
+/*    - 크기 제한이 있는 LRU 이므로 메모리가 무한히 늘지 않습니다.           */
+/* ------------------------------------------------------------------ */
+
+const driftCache = new LruCache(60);
+const cacheKey = (directionId, query) => `${directionId}\u0000${query}`;
 
 /**
- * 1. 크롬 주소창 (Omnibox) 연동 최적화
- * - 디바운스를 500ms로 조정하여 연속 타이핑 시 불필요한 모델 세션 생성 방지
- * - 최근 검색어 메모리 캐시 및 최신 입력 토큰 검증으로 이전 응답 역전 현상 차단
+ * @param {{ query: string, directionId?: string, fresh?: boolean }} params
+ *   fresh: true 면 캐시를 건너뛰고 새로 생성합니다 (다시 비틀기 등).
  */
+async function runDrift({ query, directionId, fresh = false }) {
+  const q = (query || '').trim();
+  if (!q) throw new Error('검색어가 비어있습니다.');
+
+  const direction = directionId === 'random'
+    ? pickRandomVector()
+    : findVector(directionId || DEFAULT_VECTOR_ID);
+
+  const key = cacheKey(direction.id, q);
+  if (!fresh && driftCache.has(key)) return driftCache.get(key);
+
+  const result = await callEngine('generateDriftQueries', q, direction);
+  if (result.source === 'gemini-nano') driftCache.set(key, result);
+  return result;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. 크롬 주소창 (Omnibox)                                             */
+/* ------------------------------------------------------------------ */
+
 let omniboxDebounceTimer = null;
 let currentOmniboxToken = 0;
-const omniboxCache = new Map();
-
-chrome.omnibox.onInputChanged.addListener((text, suggest) => {
-  const query = text.trim();
-  if (!query || query.length < 2) return;
-
-  // 캐시가 있으면 즉각 제안
-  if (omniboxCache.has(query)) {
-    suggest(omniboxCache.get(query));
-    return;
-  }
-
-  clearTimeout(omniboxDebounceTimer);
-  const thisToken = ++currentOmniboxToken;
-
-  omniboxDebounceTimer = setTimeout(async () => {
-    try {
-      const direction = findVector(DEFAULT_VECTOR_ID);
-      const driftResult = await nanoEngine.generateDriftQueries(query, direction);
-
-      // 사용자가 이미 다음 글자를 타이핑했다면 오래된 결과 폐기
-      if (thisToken !== currentOmniboxToken) return;
-
-      const suggestions = (driftResult.queries || []).map((item) => ({
-        content: item.query,
-        description: `<dim>[${item.stage.split(':')[0]}]</dim> <match>${escapeXml(item.query)}</match> <dim>— ${escapeXml(item.explanation.slice(0, 35))}</dim>`
-      }));
-
-      omniboxCache.set(query, suggestions);
-      suggest(suggestions);
-    } catch (err) {
-      console.warn('[Omnibox] Failed to generate suggestions:', err);
-    }
-  }, 500);
-});
-
-// 사용자가 주소창에서 추천 검색어를 선택하고 엔터를 쳤을 때: 크롬 자체 검색창으로 바로 이동!
-chrome.omnibox.onInputEntered.addListener((text, disposition) => {
-  const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(text)}`;
-  if (disposition === 'currentTab') {
-    chrome.tabs.update({ url: searchUrl });
-  } else {
-    chrome.tabs.create({ url: searchUrl });
-  }
-});
 
 function escapeXml(str) {
-  return (str || '')
+  return String(str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -79,120 +107,107 @@ function escapeXml(str) {
     .replace(/'/g, '&apos;');
 }
 
-/**
- * 2. 탭 URL 변경 감지: 사용자가 구글 검색 시 사이드패널에 실시간 검색어 브로드캐스팅
- */
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.url && (changeInfo.url.includes('google.com/search') || changeInfo.url.includes('google.co.kr/search'))) {
-    try {
-      const url = new URL(changeInfo.url);
-      const q = url.searchParams.get('q');
-      if (q) {
-        chrome.runtime.sendMessage({
-          type: 'TAB_SEARCH_UPDATED',
-          query: q,
-          tabId
-        }).catch(() => {});
-      }
-    } catch (_) {}
-  }
-});
-
-/**
- * 3. 메시지 통신 핸들러 (Content Script, SidePanel, Popup)
- */
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'CHECK_AI_STATUS') {
-    nanoEngine.checkAvailability().then(status => {
-      sendResponse(status);
-    });
-    return true;
-  }
-
-  if (request.type === 'WARMUP_MODEL') {
-    nanoEngine.warmupModel()
-      .then(res => sendResponse(res))
-      .catch(err => sendResponse({ success: false, error: err.message }));
-    return true;
-  }
-
-  if (request.type === 'RUN_DRIFT') {
-    handleRunDrift(request.data)
-      .then(result => sendResponse({ success: true, data: result }))
-      .catch(err => sendResponse({ success: false, error: err.message }));
-    return true;
-  }
-
-  if (request.type === 'SEARCH_QUERY') {
-    searchFetcher.search(request.query, request.limit || 3)
-      .then(results => sendResponse({ success: true, results }))
-      .catch(err => sendResponse({ success: false, error: err.message }));
-    return true;
-  }
-
-  if (request.type === 'DECONSTRUCT_PHRASES') {
-    nanoEngine.deconstructSentenceToPhrases(request.sentence, request.query)
-      .then(phrases => sendResponse({ success: true, phrases }))
-      .catch(err => sendResponse({ success: false, error: err.message }));
-    return true;
-  }
-
-  if (request.type === 'OPEN_SIDEPANEL') {
-    if (chrome.sidePanel && chrome.sidePanel.open && sender.tab) {
-      chrome.sidePanel.open({ windowId: sender.tab.windowId }).catch(console.warn);
-      sendResponse({ success: true });
-    } else {
-      sendResponse({ success: false, error: 'Side panel API not available' });
-    }
-    return true;
-  }
-
-  if (request.type === 'REDIRECT_SEARCH') {
-    const targetUrl = `https://www.google.com/search?q=${encodeURIComponent(request.query)}`;
-    if (sender.tab && sender.tab.id) {
-      chrome.tabs.update(sender.tab.id, { url: targetUrl });
-    } else {
-      chrome.tabs.create({ url: targetUrl });
-    }
-    sendResponse({ success: true });
-    return true;
-  }
-});
-
-/**
- * AI 비틀기 및 선택적 백그라운드 프리뷰 파이프라인
- */
-async function handleRunDrift({ query, directionId, fetchResults = false }) {
-  if (!query || !query.trim()) {
-    throw new Error('검색어가 비어있습니다.');
-  }
-
-  const direction = directionId === 'random'
-    ? pickRandomVector()
-    : findVector(directionId || DEFAULT_VECTOR_ID);
-
-  // 1. Chrome Gemini Nano로 4단계 비틀린 검색어 생성
-  const driftResult = await nanoEngine.generateDriftQueries(query.trim(), direction);
-
-  // 2. 필요 시 클라이언트 측에서 검색 결과 프리뷰 미리 가져오기
-  if (fetchResults && driftResult.queries && driftResult.queries.length > 0) {
-    const searchPromises = driftResult.queries.map(async (stageItem) => {
-      const searchData = await searchFetcher.search(stageItem.query, 2);
-      return {
-        ...stageItem,
-        searchResults: searchData
-      };
-    });
-    driftResult.queries = await Promise.all(searchPromises);
-  }
-
-  // 3. 탐색 기록 저장
-  await storage.addHistoryEntry({
-    originalQuery: query.trim(),
-    direction,
-    queries: driftResult.queries,
-    source: driftResult.source
-  });
-
-  return driftResult;
+function toSuggestions(drift) {
+  const tag = drift.source === 'gemini-nano' ? '' : '<dim>(내장 연상)</dim> ';
+  return (drift.queries || []).map((item) => ({
+    content: item.query,
+    description: `${tag}<dim>[${escapeXml(item.stage.split(':')[0])}]</dim> <match>${escapeXml(item.query)}</match> <dim>— ${escapeXml(item.explanation.slice(0, 35))}</dim>`
+  }));
 }
+
+chrome.omnibox.onInputChanged.addListener((text, suggest) => {
+  const query = text.trim();
+  clearTimeout(omniboxDebounceTimer);
+  const thisToken = ++currentOmniboxToken;
+  if (query.length < 2) return;
+
+  const cached = driftCache.get(cacheKey(DEFAULT_VECTOR_ID, query));
+  if (cached) {
+    suggest(toSuggestions(cached));
+    return;
+  }
+
+  omniboxDebounceTimer = setTimeout(async () => {
+    try {
+      const drift = await runDrift({ query, directionId: DEFAULT_VECTOR_ID });
+      // 사용자가 이미 다음 글자를 타이핑했다면 오래된 결과 폐기
+      if (thisToken !== currentOmniboxToken) return;
+      suggest(toSuggestions(drift));
+    } catch (err) {
+      console.warn('[Omnibox] Failed to generate suggestions:', err);
+    }
+  }, 500);
+});
+
+chrome.omnibox.onInputEntered.addListener((text, disposition) => {
+  const url = googleSearchUrl(text);
+  if (disposition === 'currentTab') {
+    chrome.tabs.update({ url });
+  } else {
+    chrome.tabs.create({ url, active: disposition !== 'newBackgroundTab' });
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/* 4. 구글 검색 탭의 검색어 변경을 사이드패널로 전달                        */
+/*    사이드패널은 windowId 와 active 로 자기 창의 활성 탭인지 판단합니다.   */
+/* ------------------------------------------------------------------ */
+
+const GOOGLE_SEARCH_RE = /^https:\/\/www\.google\.(?:com|co\.kr)\/search\?/;
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (!changeInfo.url || !GOOGLE_SEARCH_RE.test(changeInfo.url)) return;
+  try {
+    const q = new URL(changeInfo.url).searchParams.get('q');
+    if (!q) return;
+    chrome.runtime.sendMessage({
+      type: 'TAB_SEARCH_UPDATED',
+      query: q,
+      tabId,
+      windowId: tab.windowId,
+      active: tab.active
+    }).catch(() => {}); // 사이드패널이 닫혀 있으면 수신자가 없음
+  } catch (_) {}
+});
+
+/* ------------------------------------------------------------------ */
+/* 5. 메시지 핸들러 (Content Script, SidePanel, Popup)                  */
+/* ------------------------------------------------------------------ */
+
+const respond = (promise, sendResponse) => {
+  promise
+    .then((data) => sendResponse({ success: true, data }))
+    .catch((err) => sendResponse({ success: false, error: err?.message || String(err) }));
+  return true;
+};
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // 오프스크린 문서로 가는 메시지는 처리하지 않음
+  if (!request || request.target === 'offscreen') return false;
+
+  switch (request.type) {
+    case 'CHECK_AI_STATUS':
+      return respond(callEngine('checkAvailability', { fresh: !!request.fresh }), sendResponse);
+
+    case 'AI_STATUS_CHANGED':
+      // 팝업/사이드패널에서 모델을 활성화한 뒤 호출 → 캐시된 가용성 무효화
+      return respond(callEngine('invalidateAvailability'), sendResponse);
+
+    case 'RUN_DRIFT':
+      return respond(runDrift(request.data || {}), sendResponse);
+
+    case 'DECONSTRUCT_PHRASES':
+      return respond(callEngine('deconstructSentenceToPhrases', request.sentence), sendResponse);
+
+    case 'OPEN_SIDEPANEL':
+      // sidePanel.open 은 사용자 제스처 안에서 호출되어야 하므로 await 없이 즉시 호출
+      if (chrome.sidePanel?.open && sender.tab) {
+        return respond(chrome.sidePanel.open({ windowId: sender.tab.windowId }), sendResponse);
+      }
+      sendResponse({ success: false, error: 'Side panel API not available' });
+      return false;
+
+    default:
+      return false;
+  }
+});

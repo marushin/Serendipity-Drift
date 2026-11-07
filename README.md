@@ -28,8 +28,9 @@
 ```
 chrome_extension/
 ├── manifest.json            # Manifest V3 확장 프로그램 설정 (Omnibox, SidePanel, ContentScript)
-├── background.js            # 백그라운드 서비스 워커 (Omnibox 주소창 연동 & 메시징)
-├── content.js               # 구글 검색 결과 페이지 인라인 궤적 바 및 검색 버튼 주입
+├── background.js            # 서비스 워커 (Omnibox, 메시징, 결과 LRU 캐시, 엔진 호스트 선택)
+├── offscreen.html / .js     # SW에 Prompt API가 없을 때 Gemini Nano를 실행하는 숨은 문서
+├── content.js               # 구글 웹 검색 결과 페이지 인라인 궤적 바 및 홈 검색 버튼 주입
 ├── content.css              # 구글 페이지 주입 위젯 스타일 (다크/라이트 융합)
 ├── sidepanel.html           # 크롬 네이티브 사이드패널 UI (인터랙티브 카드 스택)
 ├── sidepanel.css            # 사이드패널 스타일 (사이버 미니멀리즘 테마)
@@ -40,11 +41,29 @@ chrome_extension/
 ├── icons/                   # 확장 프로그램 아이콘 (16, 48, 128)
 ├── src/
 │   ├── vectors.js           # 사유 벡터(렌즈) 정의
-│   ├── nano-engine.js       # Chrome Prompt API (Gemini Nano) 래퍼 & 연상 폴백
-│   ├── search-fetcher.js    # 클라이언트 사이드 경량 검색/프리뷰 파서
-│   └── storage.js           # 로컬 스토리지 & 히스토리 관리
+│   ├── nano-engine.js       # Chrome Prompt API (Gemini Nano) 래퍼, 응답 파서 & 연상 폴백
+│   ├── lru-cache.js         # 크기 제한 LRU 캐시
+│   ├── utils.js             # 공용 헬퍼 (escapeHtml 등)
+│   └── storage.js           # 사용자 설정 저장 (자동 실행 여부)
+├── tests/                   # 파서·세션 관리 단위 테스트 (node --test)
+├── scripts/package.ps1      # 배포용 zip 생성 (dist/)
 ├── GUIDE.md                 # 상세 설치 & Chrome Gemini Nano 플래그 활성화 가이드
 └── README.md                # 프로젝트 개요 및 설명서
+```
+
+### 아키텍처 메모
+
+- **엔진 호스트**: Prompt API가 서비스 워커에 노출되면 SW에서 바로 실행하고, 아니면 `offscreen.html`에서 실행합니다. 모든 호출은 `background.js`의 `callEngine()`을 거칩니다.
+- **모델 다운로드**: `LanguageModel.create()`는 모델이 없을 때 사용자 클릭(user activation)이 필요하므로, 팝업·사이드패널이 클릭 핸들러에서 `nanoEngine.activateModel()`을 직접 호출합니다.
+- **세션**: 시스템 프롬프트별 베이스 세션을 캐시하고 요청마다 `clone()` 한 1회용 세션을 사용·파기합니다.
+- **캐시**: Gemini Nano 결과만 메모리 LRU(60개)에 보관하며, 폴백 결과는 캐시하지 않습니다. 탐색 기록은 저장하지 않습니다.
+- **권한**: `sidePanel`, `storage`, `tabs`, `offscreen`만 사용하며, 콘텐츠 스크립트는 `www.google.com` / `www.google.co.kr`의 홈·검색 페이지에만 주입됩니다.
+
+## 🧪 개발
+
+```bash
+npm test           # 파서·세션 단위 테스트 (Node 18+)
+npm run package    # dist/serendipity-drift-v<버전>.zip 생성
 ```
 
 ---

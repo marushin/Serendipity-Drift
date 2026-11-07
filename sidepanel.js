@@ -1,6 +1,10 @@
-import { DRIFT_VECTORS, DEFAULT_VECTOR_ID, pickRandomVector, findVector } from './src/vectors.js';
+import { DRIFT_VECTORS, DEFAULT_VECTOR_ID, pickRandomVector } from './src/vectors.js';
+import { nanoEngine } from './src/nano-engine.js';
+import { escapeHtml, googleSearchUrl } from './src/utils.js';
 
 let trailHistory = [];
+/** 진행 중인 비틀기 요청 식별자 — 늦게 도착한 이전 응답이 화면을 덮어쓰지 않도록 */
+let driftToken = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const queryInput = document.getElementById('query-input');
@@ -9,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const randomVectorBtn = document.getElementById('random-vector-btn');
   const runDriftBtn = document.getElementById('run-drift-btn');
   const aiStatusPill = document.getElementById('ai-status-pill');
+  const aiStatusText = aiStatusPill.querySelector('.status-text');
   const activeVectorBanner = document.getElementById('active-vector-banner');
   const dockLegendBar = document.getElementById('dock-legend-bar');
   const bannerVectorTitle = document.getElementById('banner-vector-title');
@@ -21,71 +26,78 @@ document.addEventListener('DOMContentLoaded', async () => {
   const clearTrailBtn = document.getElementById('clear-trail-btn');
   const openFlagsGuide = document.getElementById('open-flags-guide');
 
-  // 1. 기본 카테고리 변환 및 20개 사유 벡터 옵션 채우기 (기본값: 'category')
-  DRIFT_VECTORS.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d.id;
-    opt.textContent = `${d.icon} ${d.title}`;
-    vectorSelect.appendChild(opt);
-  });
+  const myWindowId = (await chrome.windows.getCurrent()).id;
 
-  const randomOpt = document.createElement('option');
-  randomOpt.value = 'random';
-  randomOpt.textContent = '🎲 무작위 도약 (랜덤 벡터)';
-  vectorSelect.appendChild(randomOpt);
-
+  // 1. 사유 벡터 옵션 채우기
+  for (const d of DRIFT_VECTORS) {
+    vectorSelect.appendChild(new Option(`${d.icon} ${d.title}`, d.id));
+  }
+  vectorSelect.appendChild(new Option('🎲 무작위 도약 (랜덤 벡터)', 'random'));
   vectorSelect.value = DEFAULT_VECTOR_ID;
 
-  // 2. Chrome Gemini Nano 모델 상태 확인
-  checkModelStatus();
+  // 2. Gemini Nano 상태
+  let modelStatus = 'unknown';
+
+  function setPill(cls, text) {
+    aiStatusPill.className = `status-pill ${cls}`;
+    aiStatusText.textContent = text;
+  }
 
   async function checkModelStatus() {
     try {
-      const status = await chrome.runtime.sendMessage({ type: 'CHECK_AI_STATUS' });
-      aiStatusPill.className = 'status-pill';
-
-      if (status.status === 'ready') {
-        aiStatusPill.classList.add('status-ready');
-        aiStatusPill.querySelector('.status-text').textContent = 'Gemini Nano 준비됨';
-      } else if (status.status === 'downloading') {
-        aiStatusPill.classList.add('status-downloading');
-        aiStatusPill.querySelector('.status-text').textContent = '모델 활성화 (클릭)';
-      } else {
-        aiStatusPill.classList.add('status-fallback');
-        aiStatusPill.querySelector('.status-text').textContent = '내장 연상 모드';
-      }
+      const res = await chrome.runtime.sendMessage({ type: 'CHECK_AI_STATUS', fresh: true });
+      modelStatus = res?.data?.status || 'error';
     } catch (_) {
-      aiStatusPill.className = 'status-pill status-fallback';
-      aiStatusPill.querySelector('.status-text').textContent = '내장 연상 모드';
+      modelStatus = 'error';
+    }
+
+    if (modelStatus === 'ready') {
+      setPill('status-ready', 'Gemini Nano 준비됨');
+      aiStatusPill.title = 'Gemini Nano 온디바이스 모델 사용 중';
+    } else if (modelStatus === 'downloading') {
+      setPill('status-downloading', '모델 받기 (클릭)');
+      aiStatusPill.title = '클릭하면 Gemini Nano 모델 다운로드를 시작합니다';
+    } else {
+      setPill('status-fallback', '내장 연상 모드');
+      aiStatusPill.title = 'Prompt API를 사용할 수 없어 내장 연상 키워드로 동작합니다. 설정 가이드를 확인하세요.';
     }
   }
 
-  // 상태 배지 클릭 시 모델 즉시 활성화(Warmup) 시도
+  checkModelStatus();
   aiStatusPill.style.cursor = 'pointer';
+
+  // 상태 배지 클릭 → 모델 다운로드/활성화.
+  // LanguageModel.create() 는 사용자 활성화가 필요하므로 이 페이지에서 직접 호출합니다.
   aiStatusPill.addEventListener('click', async () => {
-    aiStatusPill.querySelector('.status-text').textContent = '모델 활성화 중...';
-    const res = await chrome.runtime.sendMessage({ type: 'WARMUP_MODEL' });
-    if (res && res.success) {
-      aiStatusPill.className = 'status-pill status-ready';
-      aiStatusPill.querySelector('.status-text').textContent = 'Gemini Nano 준비됨';
-    } else {
-      checkModelStatus();
+    if (modelStatus === 'ready') return;
+    if (modelStatus !== 'downloading') {
+      chrome.tabs.create({ url: chrome.runtime.getURL('guide.html') });
+      return;
     }
+
+    setPill('status-downloading', '모델 준비 중...');
+    const res = await nanoEngine.activateModel((loaded, total) => {
+      const ratio = total ? loaded / total : loaded; // 신형 API 는 0~1 비율을 보고
+      aiStatusText.textContent = `모델 다운로드 ${Math.round(ratio * 100)}%`;
+    });
+    await chrome.runtime.sendMessage({ type: 'AI_STATUS_CHANGED' }).catch(() => {});
+    if (!res.success) {
+      aiStatusPill.title = `활성화 실패: ${res.error}`;
+    }
+    checkModelStatus();
   });
 
-  // 3. 현재 활성 탭의 검색어 자동 감지 함수
+  // 3. 현재 창의 활성 탭 검색어 동기화
   async function syncActiveTabQuery() {
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab && tab.url) {
-        const url = new URL(tab.url);
-        if ((url.hostname.includes('google.com') || url.hostname.includes('google.co.kr')) && url.searchParams.has('q')) {
-          const q = url.searchParams.get('q');
-          if (q && q !== queryInput.value) {
-            queryInput.value = q;
-            return true;
-          }
-        }
+      const [tab] = await chrome.tabs.query({ active: true, windowId: myWindowId });
+      if (!tab?.url) return false;
+      const url = new URL(tab.url);
+      const isGoogle = url.hostname === 'www.google.com' || url.hostname === 'www.google.co.kr';
+      const q = url.searchParams.get('q');
+      if (isGoogle && q && q !== queryInput.value) {
+        queryInput.value = q;
+        return true;
       }
     } catch (e) {
       console.warn('Tab query failed:', e);
@@ -94,45 +106,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   syncTabBtn.addEventListener('click', async () => {
-    const synced = await syncActiveTabQuery();
-    if (synced) queryInput.focus();
+    if (await syncActiveTabQuery()) queryInput.focus();
   });
 
-  // 초기 탭 검색어 동기화 시도
   syncActiveTabQuery();
 
-  // 4. 실시간 탭 검색어 변경 메시지 수신 (구글 탭에서 검색 시 자동 동기화)
+  // 4. 같은 창의 활성 탭에서 검색했을 때만 입력값 동기화
   chrome.runtime.onMessage.addListener((msg) => {
-    if (msg.type === 'TAB_SEARCH_UPDATED' && msg.query) {
-      if (queryInput.value !== msg.query) {
-        queryInput.value = msg.query;
-      }
-    }
+    if (msg?.type !== 'TAB_SEARCH_UPDATED' || !msg.query) return;
+    if (msg.windowId !== myWindowId || !msg.active) return;
+    if (queryInput.value !== msg.query) queryInput.value = msg.query;
   });
 
-  // 5. 사유 벡터 랜덤 셔플
+  // 5. 벡터 셔플
   randomVectorBtn.addEventListener('click', () => {
-    const random = pickRandomVector();
-    vectorSelect.value = random.id;
+    vectorSelect.value = pickRandomVector().id;
   });
 
-  // 6. 비틀기 실행 핸들러
+  // 6. 비틀기 실행
   runDriftBtn.addEventListener('click', () => {
     const query = queryInput.value.trim();
     if (!query) {
       queryInput.focus();
       return;
     }
-    executeDrift(query, vectorSelect.value);
+    executeDrift(query, vectorSelect.value, { fresh: true });
   });
 
   queryInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      runDriftBtn.click();
-    }
+    if (e.key === 'Enter' && !e.isComposing) runDriftBtn.click();
   });
 
-  async function executeDrift(query, vectorId) {
+  async function executeDrift(query, vectorId, { fresh = false } = {}) {
+    const token = ++driftToken;
+
     emptyState.style.display = 'none';
     cardStack.style.display = 'none';
     activeVectorBanner.style.display = 'none';
@@ -140,149 +147,148 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadingState.style.display = 'flex';
     runDriftBtn.disabled = true;
 
+    let response;
     try {
-      const response = await chrome.runtime.sendMessage({
+      response = await chrome.runtime.sendMessage({
         type: 'RUN_DRIFT',
-        data: { query, directionId: vectorId, fetchResults: false }
+        data: { query, directionId: vectorId, fresh }
       });
-
-      if (!response || !response.success || !response.data) {
-        throw new Error(response?.error || '비틀기 응답 실패');
-      }
-
-      const drift = response.data;
-      renderDriftResult(drift);
-
-      // 궤적(Breadcrumbs) 업데이트
-      updateTrail(query);
     } catch (err) {
-      alert(`오류: ${err.message}`);
-      emptyState.style.display = 'flex';
-    } finally {
-      loadingState.style.display = 'none';
-      runDriftBtn.disabled = false;
+      response = { success: false, error: err.message };
     }
+
+    // 더 최근 요청이 있으면 이 응답은 무시 (로딩 상태도 최신 요청이 정리)
+    if (token !== driftToken) return;
+
+    loadingState.style.display = 'none';
+    runDriftBtn.disabled = false;
+
+    if (!response?.success || !response.data) {
+      emptyState.style.display = 'flex';
+      alert(`오류: ${response?.error || '비틀기 응답 실패'}`);
+      return;
+    }
+
+    renderDriftResult(response.data);
+    updateTrail(query);
   }
 
-  // 7. Chrome 공식 웹사이트 스타일 4단계 카드 스택 렌더링
+  // 7. 4단계 카드 스택 렌더링
   function renderDriftResult(drift) {
     const dir = drift.direction;
     bannerVectorTitle.textContent = `${dir.icon || '🧭'} ${dir.title}`;
     bannerVectorPrompt.textContent = `"${dir.prompt}"`;
+
+    activeVectorBanner.querySelector('.fallback-note')?.remove();
+    if (drift.source !== 'gemini-nano') {
+      const note = document.createElement('p');
+      note.className = 'fallback-note';
+      note.textContent = '⚠️ Gemini Nano를 사용할 수 없어 내장 연상 키워드로 대신한 결과입니다. 상단 상태 배지를 눌러 모델을 활성화하세요.';
+      activeVectorBanner.appendChild(note);
+    }
+
     activeVectorBanner.style.display = 'block';
     if (dockLegendBar) dockLegendBar.style.display = 'flex';
 
-    cardStack.innerHTML = '';
+    cardStack.replaceChildren();
     cardStack.style.display = 'flex';
 
-    (drift.queries || []).forEach((item) => {
-      const rank = item.rank || 1;
-      const card = document.createElement('article');
-      card.className = `drift-card step-card step-${rank}`;
-
-      const defaultScopes = ['동일 소분류', '인접 중분류', '교차 대분류', '사유의 끝점'];
-      const scopeTag = item.scope || (defaultScopes[rank - 1] || '');
-
-      const cleanQuery = (item.query || '')
-        .replace(/^\[(?:동일\s*소분류|인접\s*중분류|교차\s*대분류|사유의\s*끝점|소분류|중분류|대분류|[^\]]+)\]\s*/i, '')
-        .trim();
-      const cleanExp = (item.explanation || '')
-        .replace(/^\[(?:동일\s*소분류|인접\s*중분류|교차\s*대분류|사유의\s*끝점|소분류|중분류|대분류|[^\]]+)\]\s*/i, '')
-        .trim();
-
-      card.innerHTML = `
-        <!-- 상단 히어로 영역 (크롬 공식 사이트 컬러 블록) -->
-        <div class="card-hero">
-          <div class="card-step-badge-row">
-            <span class="card-step-badge">${rank}단계 · ${item.distance || (rank * 25 + '%')}</span>
-            ${scopeTag ? `<span class="card-scope-badge">${escapeHtml(scopeTag)}</span>` : ''}
-          </div>
-          <h2 class="card-headline">${escapeHtml(cleanQuery)}</h2>
-          <p class="card-desc">${escapeHtml(cleanExp)}</p>
-        </div>
-
-        <!-- 하단 트레이 영역 (트레이 직접 배치) -->
-        <div class="card-tray">
-          <div class="card-actions icon-only-actions">
-            <button class="btn-dock btn-dock-primary search-chrome-btn" title="크롬 검색창으로 검색" aria-label="크롬 검색창으로 검색">
-              <span class="dock-icon">🔍</span>
-            </button>
-            <button class="btn-dock btn-dock-secondary branch-btn" title="이 조각으로 도약" aria-label="이 조각으로 도약">
-              <span class="dock-icon">🌱</span>
-            </button>
-            <button class="btn-dock btn-dock-subtle deconstruct-btn" title="구절 분해" aria-label="구절 분해">
-              <span class="dock-icon">✂️</span>
-            </button>
-          </div>
-          <div class="phrase-drawer" style="display: none;"></div>
-        </div>
-      `;
-
-      // '크롬으로 검색' 버튼 클릭 시: 새 탭에서 구글 검색창으로 이동
-      const openChromeSearch = () => {
-        chrome.tabs.create({
-          url: `https://www.google.com/search?q=${encodeURIComponent(cleanQuery)}`
-        });
-      };
-
-      card.querySelector('.search-chrome-btn').addEventListener('click', openChromeSearch);
-
-      // '이 조각으로 도약' 클릭 시: 현재 선택된 사유 벡터를 유지하며 다시 비틀기
-      card.querySelector('.branch-btn').addEventListener('click', () => {
-        queryInput.value = cleanQuery;
-        executeDrift(cleanQuery, vectorSelect.value || DEFAULT_VECTOR_ID);
-      });
-
-      // '구절 분해' 클릭 시: 문장을 더 잘게 쪼개어 세부 씨앗 생성 (art-hackathon 분해 기능)
-      const deconstructBtn = card.querySelector('.deconstruct-btn');
-      const phraseDrawer = card.querySelector('.phrase-drawer');
-
-      deconstructBtn.addEventListener('click', async () => {
-        if (phraseDrawer.style.display === 'flex') {
-          phraseDrawer.style.display = 'none';
-          return;
-        }
-
-        phraseDrawer.style.display = 'flex';
-        phraseDrawer.innerHTML = '<span class="phrase-loading">✂️ 문장을 조각내는 중...</span>';
-
-        try {
-          const res = await chrome.runtime.sendMessage({
-            type: 'DECONSTRUCT_PHRASES',
-            sentence: cleanExp,
-            query: cleanQuery
-          });
-
-          if (res && res.success && res.phrases?.length > 0) {
-            phraseDrawer.innerHTML = '';
-            res.phrases.forEach((phrase) => {
-              const pill = document.createElement('span');
-              pill.className = 'phrase-pill';
-              pill.textContent = phrase;
-              pill.title = `"${phrase}"(으)로 사유 도약하기`;
-              pill.addEventListener('click', () => {
-                queryInput.value = phrase;
-                executeDrift(phrase, vectorSelect.value || DEFAULT_VECTOR_ID);
-              });
-              phraseDrawer.appendChild(pill);
-            });
-          } else {
-            phraseDrawer.innerHTML = '<span class="phrase-loading">분해할 구절을 찾지 못했습니다.</span>';
-          }
-        } catch (_) {
-          phraseDrawer.innerHTML = '<span class="phrase-loading">구절 분해 중 오류가 발생했습니다.</span>';
-        }
-      });
-
-      cardStack.appendChild(card);
-    });
+    for (const item of drift.queries || []) {
+      cardStack.appendChild(createCard(item));
+    }
   }
 
-  // 8. 탐색 궤적(Breadcrumb) 관리
-  function updateTrail(query) {
-    if (!trailHistory.includes(query)) {
-      trailHistory.push(query);
+  function createCard(item) {
+    const rank = item.rank || 1;
+    const card = document.createElement('article');
+    card.className = `drift-card step-card step-${rank}`;
+
+    card.innerHTML = `
+      <div class="card-hero">
+        <div class="card-step-badge-row">
+          <span class="card-step-badge">${rank}단계 · ${escapeHtml(item.distance || `${rank * 25}%`)}</span>
+          ${item.scope ? `<span class="card-scope-badge">${escapeHtml(item.scope)}</span>` : ''}
+        </div>
+        <h2 class="card-headline">${escapeHtml(item.query)}</h2>
+        <p class="card-desc">${escapeHtml(item.explanation)}</p>
+      </div>
+      <div class="card-tray">
+        <div class="card-actions icon-only-actions">
+          <button class="btn-dock btn-dock-primary search-chrome-btn" title="크롬 검색창으로 검색" aria-label="크롬 검색창으로 검색">
+            <span class="dock-icon">🔍</span>
+          </button>
+          <button class="btn-dock btn-dock-secondary branch-btn" title="이 조각으로 도약" aria-label="이 조각으로 도약">
+            <span class="dock-icon">🌱</span>
+          </button>
+          <button class="btn-dock btn-dock-subtle deconstruct-btn" title="구절 분해" aria-label="구절 분해">
+            <span class="dock-icon">✂️</span>
+          </button>
+        </div>
+        <div class="phrase-drawer" style="display: none;"></div>
+      </div>
+    `;
+
+    card.querySelector('.search-chrome-btn').addEventListener('click', () => {
+      chrome.tabs.create({ url: googleSearchUrl(item.query) });
+    });
+
+    card.querySelector('.branch-btn').addEventListener('click', () => {
+      queryInput.value = item.query;
+      executeDrift(item.query, vectorSelect.value || DEFAULT_VECTOR_ID);
+    });
+
+    const phraseDrawer = card.querySelector('.phrase-drawer');
+    let phraseToken = 0;
+
+    card.querySelector('.deconstruct-btn').addEventListener('click', async () => {
+      if (phraseDrawer.style.display === 'flex') {
+        phraseDrawer.style.display = 'none';
+        phraseToken++;
+        return;
+      }
+
+      const token = ++phraseToken;
+      phraseDrawer.style.display = 'flex';
+      setPhraseMessage('✂️ 문장을 조각내는 중...');
+
+      try {
+        const res = await chrome.runtime.sendMessage({ type: 'DECONSTRUCT_PHRASES', sentence: item.explanation });
+        if (token !== phraseToken) return;
+
+        const phrases = res?.success ? res.data : [];
+        if (!phrases?.length) {
+          setPhraseMessage('분해할 구절을 찾지 못했습니다.');
+          return;
+        }
+        phraseDrawer.replaceChildren(...phrases.map((phrase) => {
+          const pill = document.createElement('span');
+          pill.className = 'phrase-pill';
+          pill.textContent = phrase;
+          pill.title = `"${phrase}"(으)로 사유 도약하기`;
+          pill.addEventListener('click', () => {
+            queryInput.value = phrase;
+            executeDrift(phrase, vectorSelect.value || DEFAULT_VECTOR_ID);
+          });
+          return pill;
+        }));
+      } catch (_) {
+        if (token === phraseToken) setPhraseMessage('구절 분해 중 오류가 발생했습니다.');
+      }
+    });
+
+    function setPhraseMessage(text) {
+      const span = document.createElement('span');
+      span.className = 'phrase-loading';
+      span.textContent = text;
+      phraseDrawer.replaceChildren(span);
     }
+
+    return card;
+  }
+
+  // 8. 탐색 궤적(Breadcrumb) — 패널이 열려 있는 동안만 메모리에 유지
+  function updateTrail(query) {
+    if (!trailHistory.includes(query)) trailHistory.push(query);
     renderTrail();
   }
 
@@ -293,7 +299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     historyTrail.style.display = 'flex';
-    trailItems.innerHTML = '';
+    trailItems.replaceChildren();
 
     trailHistory.forEach((q, idx) => {
       const node = document.createElement('span');
@@ -321,16 +327,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderTrail();
   });
 
-  // 9. Gemini Nano 가이드 페이지 열기
+  // 9. 가이드 페이지
   openFlagsGuide.addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('guide.html') });
   });
-
-  function escapeHtml(str) {
-    return (str || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
 });

@@ -1,56 +1,94 @@
 /**
  * Google 검색 페이지 콘텐츠 스크립트
- * 크롬 검색창과 직접 연동하여, 사용자의 검색어를 실시간으로 비틀고
- * 구글 검색 결과 상단 및 검색창 옆에 단계별 비틀린 검색 경로를 주입합니다.
+ * - 홈 화면: '비틀어 검색' 버튼 주입
+ * - 웹 검색 결과 페이지: 상단에 4단계 비틀린 검색어 바 주입
+ *
+ * 콘텐츠 스크립트는 ES 모듈을 import 할 수 없으므로 필요한 상수를 직접 둡니다.
  */
 
 (function () {
   'use strict';
 
-  // 중복 삽입 방지
   if (window.__serendipityDriftInjected) return;
   window.__serendipityDriftInjected = true;
 
+  // src/storage.js 의 SETTINGS_KEY / DEFAULT_SETTINGS 와 동일하게 유지
+  const SETTINGS_KEY = 'serendipity_drift_settings';
+  const DEFAULT_AUTO_RUN = true;
+
+  const BAR_ID = 'serendipity-drift-bar';
+  const HOME_BTN_ID = 'serendipity-home-btn';
+
   let currentQuery = '';
-  let activeDriftData = null;
+  /** 진행 중인 요청 식별자. 응답 도착 시 최신 요청이 아니면 버립니다. */
+  let requestToken = 0;
 
-  // 구글 검색창의 현재 검색어 추출
-  function extractSearchQuery() {
-    // 1. URL 파라미터에서 추출
-    const urlParams = new URLSearchParams(window.location.search);
-    const qParam = urlParams.get('q');
-    if (qParam && qParam.trim()) return qParam.trim();
+  const googleSearchUrl = (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
 
-    // 2. 검색 입력창에서 추출
-    const searchInput = document.querySelector('input[name="q"], textarea[name="q"]');
-    if (searchInput && searchInput.value && searchInput.value.trim()) {
-      return searchInput.value.trim();
+  /** 간단한 DOM 생성 헬퍼 (텍스트는 항상 textContent 로 넣어 XSS 를 원천 차단) */
+  function el(tag, props = {}, children = []) {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (v == null) continue;
+      if (k === 'className') node.className = v;
+      else if (k === 'text') node.textContent = v;
+      else if (k.startsWith('on')) node.addEventListener(k.slice(2).toLowerCase(), v);
+      else node.setAttribute(k, v);
     }
-
-    return '';
+    for (const child of [].concat(children)) {
+      if (child != null) node.append(child);
+    }
+    return node;
   }
 
-  // 구글 홈 화면('google.com') 검색 버튼 영역에 '비틀어서 검색' 버튼 주입
+  async function getAutoRun() {
+    try {
+      const data = await chrome.storage.local.get(SETTINGS_KEY);
+      const autoRun = data?.[SETTINGS_KEY]?.autoRun;
+      return typeof autoRun === 'boolean' ? autoRun : DEFAULT_AUTO_RUN;
+    } catch (_) {
+      return DEFAULT_AUTO_RUN;
+    }
+  }
+
+  /** 이미지·동영상·뉴스 등 다른 탭이 아닌 '전체(웹)' 검색 결과인지 */
+  function isWebSearchPage() {
+    if (!location.pathname.startsWith('/search')) return false;
+    const params = new URLSearchParams(location.search);
+    if (params.get('tbm')) return false;
+    const udm = params.get('udm');
+    return !udm || udm === '14';
+  }
+
+  function extractSearchQuery() {
+    const q = new URLSearchParams(location.search).get('q');
+    if (q && q.trim()) return q.trim();
+    const input = document.querySelector('input[name="q"], textarea[name="q"]');
+    return input?.value?.trim() || '';
+  }
+
+  function sendMessage(message) {
+    return chrome.runtime.sendMessage(message);
+  }
+
+  /* -------------------------------------------------------------- */
+  /* 홈 화면 버튼                                                     */
+  /* -------------------------------------------------------------- */
+
   function injectHomeSearchButton() {
-    const isSearchPage = window.location.pathname.startsWith('/search');
-    if (isSearchPage) return;
+    if (location.pathname.startsWith('/search')) return;
+    if (document.getElementById(HOME_BTN_ID)) return;
 
-    // 이미 주입되었으면 건너뜀
-    if (document.getElementById('serendipity-home-btn')) return;
-
-    // 구글 홈 검색 버튼 컨테이너 찾기
-    const btnContainers = document.querySelectorAll('center input[name="btnK"], form input[name="btnK"]');
-    if (!btnContainers || btnContainers.length === 0) return;
-
-    const googleBtn = btnContainers[0];
-    const parent = googleBtn.parentElement;
+    const googleBtn = document.querySelector('center input[name="btnK"], form input[name="btnK"]');
+    const parent = googleBtn?.parentElement;
     if (!parent) return;
 
-    const driftBtn = document.createElement('input');
-    driftBtn.id = 'serendipity-home-btn';
-    driftBtn.type = 'button';
-    driftBtn.value = '🌐 Chrome AI 비틀어 검색';
-    driftBtn.className = 'serendipity-google-btn';
+    const driftBtn = el('input', {
+      id: HOME_BTN_ID,
+      type: 'button',
+      value: '🌐 Chrome AI 비틀어 검색',
+      className: 'serendipity-google-btn'
+    });
 
     driftBtn.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -61,213 +99,228 @@
       driftBtn.value = '🌀 Gemini Nano가 비트는 중...';
       driftBtn.disabled = true;
 
+      let target = query;
       try {
-        const response = await chrome.runtime.sendMessage({
-          type: 'RUN_DRIFT',
-          data: { query, directionId: 'category', fetchResults: false }
-        });
-
-        if (response && response.success && response.data?.queries?.length > 0) {
-          // 4단계 중 2~3단계의 도약 검색어로 이동
-          const pick = response.data.queries[1] || response.data.queries[0];
-          window.location.href = `https://www.google.com/search?q=${encodeURIComponent(pick.query)}`;
-        } else {
-          // 폴백: 바로 원래 검색
-          window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        }
+        const res = await sendMessage({ type: 'RUN_DRIFT', data: { query, directionId: 'category' } });
+        const picked = res?.success && (res.data.queries[1] || res.data.queries[0]);
+        if (picked) target = picked.query;
       } catch (err) {
-        console.warn('Drift failed:', err);
-        window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        console.warn('[Serendipity Drift] Drift failed:', err);
       }
+      location.href = googleSearchUrl(target);
     });
 
     parent.appendChild(driftBtn);
   }
 
-  // 구글 검색 결과 페이지('/search') 상단에 비틀린 궤적 바 주입
-  function injectDriftBar(query) {
-    if (!query) return;
-    if (document.getElementById('serendipity-drift-bar')) {
-      // 검색어가 바뀌었는지 확인
-      if (currentQuery === query) return;
-      document.getElementById('serendipity-drift-bar').remove();
+  /* -------------------------------------------------------------- */
+  /* 검색 결과 상단 바                                                 */
+  /* -------------------------------------------------------------- */
+
+  function detectDarkTheme() {
+    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return true;
+    if (document.documentElement.getAttribute('data-darkmode') === 'true') return true;
+    if (document.body.classList.contains('dark')) return true;
+    try {
+      const m = getComputedStyle(document.body).backgroundColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+      return m ? (m[1] * 0.299 + m[2] * 0.587 + m[3] * 0.114) < 128 : false;
+    } catch (_) {
+      return false;
     }
+  }
 
-    currentQuery = query;
+  // 정적 마크업(외부 데이터 없음)
+  const CHROME_ICON_SVG = `
+    <svg class="serendipity-chrome-icon" viewBox="0 0 48 48" width="22" height="22" fill="none" aria-hidden="true">
+      <path d="M24 4.5C15.8 4.5 8.7 9.4 5.5 16.5L16.2 35.1C18.4 36.6 21.1 37.5 24 37.5C31.5 37.5 37.5 31.5 37.5 24C37.5 23.3 37.4 22.7 37.3 22H24V4.5Z" fill="#ea4335"/>
+      <path d="M43.5 24C43.5 18.5 41.3 13.5 37.8 9.9L24 33.8H12.3L22.9 43.1C23.3 43.1 23.6 43.2 24 43.2C34.8 43.2 43.5 34.5 43.5 24Z" fill="#fbbc04"/>
+      <path d="M4.5 24C4.5 29.5 6.7 34.5 10.2 38.1L24 14.2H35.7L25.1 4.9C24.7 4.9 24.4 4.8 24 4.8C13.2 4.8 4.5 13.5 4.5 24Z" fill="#34a853"/>
+      <circle cx="24" cy="24" r="9.5" fill="#ffffff"/>
+      <circle cx="24" cy="24" r="7.5" fill="#1a73e8"/>
+    </svg>`;
 
-    // 검색 결과 삽입 타겟 컨테이너 찾기
+  function removeDriftBar() {
+    document.getElementById(BAR_ID)?.remove();
+    currentQuery = '';
+    requestToken++; // 진행 중인 응답 무효화
+  }
+
+  async function injectDriftBar(query) {
+    if (!query) return;
+    const existing = document.getElementById(BAR_ID);
+    if (existing && currentQuery === query) return;
+    existing?.remove();
+
     const target = document.getElementById('search') ||
                    document.getElementById('rcnt') ||
                    document.getElementById('center_col') ||
                    document.querySelector('[role="main"]');
+    if (!target?.parentNode) return;
 
-    if (!target) return;
+    currentQuery = query;
 
-    // 구글 검색창 테마(다크모드/라이트모드) 자동 감지
-    const isDark = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-                   document.documentElement.getAttribute('data-darkmode') === 'true' ||
-                   document.body.classList.contains('dark') ||
-                   (() => {
-                     try {
-                       const m = window.getComputedStyle(document.body).backgroundColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-                       return m ? (m[1] * 0.299 + m[2] * 0.587 + m[3] * 0.114) < 128 : false;
-                     } catch (_) { return false; }
-                   })();
+    const titleGroup = el('div', { className: 'serendipity-title-group' });
+    titleGroup.innerHTML = CHROME_ICON_SVG;
+    titleGroup.append(
+      el('h3', { className: 'serendipity-heading', text: '비틀린 사유의 궤적' }),
+      el('span', { className: 'serendipity-badge', text: 'Chrome AI' })
+    );
 
-    const container = document.createElement('div');
-    container.id = 'serendipity-drift-bar';
-    container.className = `serendipity-drift-container${isDark ? ' serendipity-dark' : ''}`;
-    container.innerHTML = `
-      <div class="serendipity-drift-header">
-        <div class="serendipity-title-group">
-          <svg class="serendipity-chrome-icon" viewBox="0 0 48 48" width="22" height="22" fill="none">
-            <path d="M24 4.5C15.8 4.5 8.7 9.4 5.5 16.5L16.2 35.1C18.4 36.6 21.1 37.5 24 37.5C31.5 37.5 37.5 31.5 37.5 24C37.5 23.3 37.4 22.7 37.3 22H24V4.5Z" fill="#ea4335"/>
-            <path d="M43.5 24C43.5 18.5 41.3 13.5 37.8 9.9L24 33.8H12.3L22.9 43.1C23.3 43.1 23.6 43.2 24 43.2C34.8 43.2 43.5 34.5 43.5 24Z" fill="#fbbc04"/>
-            <path d="M4.5 24C4.5 29.5 6.7 34.5 10.2 38.1L24 14.2H35.7L25.1 4.9C24.7 4.9 24.4 4.8 24 4.8C13.2 4.8 4.5 13.5 4.5 24Z" fill="#34a853"/>
-            <circle cx="24" cy="24" r="9.5" fill="#ffffff"/>
-            <circle cx="24" cy="24" r="7.5" fill="#1a73e8"/>
-          </svg>
-          <h3 class="serendipity-heading">비틀린 사유의 궤적</h3>
-          <span class="serendipity-badge">Chrome AI</span>
-        </div>
-        <div class="serendipity-actions">
-          <button id="serendipity-reroll-btn" class="serendipity-btn" title="다른 사유 벡터로 다시 비틀기">
-            🎲 다른 각도
-          </button>
-          <button id="serendipity-sidepanel-btn" class="serendipity-btn serendipity-btn-primary" title="사이드패널에서 카드 스택 탐색">
-            📖 카드 스택
-          </button>
-        </div>
-      </div>
-      <div id="serendipity-vector-indicator" class="serendipity-vector-tag">
-        <span class="serendipity-spinner"></span> 사유의 벡터를 탐색하는 중...
-      </div>
-      <div id="serendipity-chips-container" class="serendipity-chips-row">
-        <!-- 4단계 칩이 여기에 로드됩니다 -->
-      </div>
-    `;
+    const indicator = el('div', { className: 'serendipity-vector-tag', 'aria-live': 'polite' });
+    const chips = el('div', { className: 'serendipity-chips-row' });
 
-    target.parentNode.insertBefore(container, target);
+    const bar = el('div', {
+      id: BAR_ID,
+      className: `serendipity-drift-container${detectDarkTheme() ? ' serendipity-dark' : ''}`
+    }, [
+      el('div', { className: 'serendipity-drift-header' }, [
+        titleGroup,
+        el('div', { className: 'serendipity-actions' }, [
+          el('button', {
+            type: 'button',
+            className: 'serendipity-btn',
+            title: '다른 사유 벡터로 다시 비틀기',
+            text: '🎲 다른 각도',
+            onClick: () => loadDriftData(bar, query, 'random', true)
+          }),
+          el('button', {
+            type: 'button',
+            className: 'serendipity-btn serendipity-btn-primary',
+            title: '사이드패널에서 카드 스택 탐색',
+            text: '📖 카드 스택',
+            onClick: () => sendMessage({ type: 'OPEN_SIDEPANEL' }).catch(() => {})
+          })
+        ])
+      ]),
+      indicator,
+      chips
+    ]);
+    bar._refs = { indicator, chips };
 
-    // 이벤트 리스너 등록
-    container.querySelector('#serendipity-reroll-btn').addEventListener('click', () => {
-      loadDriftData(query, 'random', true);
-    });
+    target.parentNode.insertBefore(bar, target);
 
-    container.querySelector('#serendipity-sidepanel-btn').addEventListener('click', () => {
-      chrome.runtime.sendMessage({ type: 'OPEN_SIDEPANEL' });
-    });
-
-    // 데이터 로드 (기본값: 관련 카테고리 내 변환)
-    loadDriftData(query, 'category', false);
-  }
-
-  // 백그라운드 모델에 요청하여 비틀린 검색어 받아와 렌더링
-  async function loadDriftData(query, directionId = 'category', forceReroll = false) {
-    const vectorEl = document.getElementById('serendipity-vector-indicator');
-    const chipsEl = document.getElementById('serendipity-chips-container');
-    if (!vectorEl || !chipsEl) return;
-
-    vectorEl.innerHTML = '<span class="serendipity-spinner"></span> 온디바이스 모델로 새로운 사유를 직조하는 중...';
-    chipsEl.innerHTML = '';
-
-    try {
-      const response = await chrome.runtime.sendMessage({
-        type: 'RUN_DRIFT',
-        data: { query, directionId, fetchResults: false }
-      });
-
-      if (!response || !response.success || !response.data) {
-        throw new Error(response?.error || '비틀기 응답을 받지 못했습니다.');
-      }
-
-      const drift = response.data;
-      activeDriftData = drift;
-
-      // 벡터 표시
-      const dir = drift.direction;
-      vectorEl.innerHTML = `
-        <span class="serendipity-vector-icon">${dir.icon || '🧭'}</span>
-        <strong class="serendipity-vector-name">${dir.title}</strong>
-        <span class="serendipity-vector-prompt">"${dir.prompt}"</span>
-      `;
-
-      // 4단계 칩 렌더링 (구글 페이지 내 검색창: 좁은 공간 최적화 - [동일 소분류] 등 앞단 태그 완전 제거)
-      chipsEl.innerHTML = '';
-      (drift.queries || []).forEach((item) => {
-        const rank = item.rank || 1;
-        const chip = document.createElement('div');
-        chip.className = `serendipity-stage-chip chip-step-${rank}`;
-
-        // 설명 및 검색어에서 [동일 소분류] 등 모든 대괄호 접두사 깔끔하게 제거
-        const cleanQuery = (item.query || '')
-          .replace(/^\[(?:동일\s*소분류|인접\s*중분류|교차\s*대분류|사유의\s*끝점|소분류|중분류|대분류|[^\]]+)\]\s*/i, '')
-          .trim();
-        const cleanExp = (item.explanation || '')
-          .replace(/^\[(?:동일\s*소분류|인접\s*중분류|교차\s*대분류|사유의\s*끝점|소분류|중분류|대분류|[^\]]+)\]\s*/i, '')
-          .trim();
-
-        chip.title = `${item.stage}\n${cleanExp}\n(클릭하여 이 검색어로 구글 검색)`;
-        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(cleanQuery)}`;
-
-        chip.innerHTML = `
-          <div class="serendipity-chip-meta">
-            <span class="serendipity-stage-rank">${item.rank}단계 · ${item.distance} 이탈</span>
-          </div>
-          <div class="serendipity-chip-query">${escapeHtml(cleanQuery)}</div>
-          <div class="serendipity-chip-exp">${escapeHtml(cleanExp)}</div>
-          <a href="${searchUrl}" class="serendipity-chip-link">크롬 검색창으로 바로 가기 ↗</a>
-        `;
-
-        chip.addEventListener('click', (e) => {
-          // 링크 클릭이 아니더라도 카드 전체 클릭 시 이동
-          if (e.target.tagName !== 'A') {
-            window.location.href = searchUrl;
-          }
-        });
-
-        chipsEl.appendChild(chip);
-      });
-
-    } catch (err) {
-      console.warn('Drift load error:', err);
-      vectorEl.innerHTML = `<span class="serendipity-error">⚠️ 비틀기 중 오류 발생: ${escapeHtml(err.message)}</span>`;
+    if (await getAutoRun()) {
+      loadDriftData(bar, query, 'category', false);
+    } else {
+      showIdle(bar, query);
     }
   }
 
-  function escapeHtml(str) {
-    return (str || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+  /** 자동 실행이 꺼져 있을 때: 사용자가 직접 실행하도록 버튼 표시 */
+  function showIdle(bar, query) {
+    const { indicator, chips } = bar._refs;
+    chips.replaceChildren();
+    indicator.replaceChildren(
+      el('span', { text: '이 검색어를 비틀어 낯선 검색어 4개를 만들어 볼까요?' }),
+      el('button', {
+        type: 'button',
+        className: 'serendipity-btn serendipity-btn-primary serendipity-run-btn',
+        text: '⚡ 비틀기',
+        onClick: () => loadDriftData(bar, query, 'category', false)
+      })
+    );
   }
 
-  // 초기화 및 URL 변경 감지
+  async function loadDriftData(bar, query, directionId, fresh) {
+    const token = ++requestToken;
+    const { indicator, chips } = bar._refs;
+
+    indicator.replaceChildren(
+      el('span', { className: 'serendipity-spinner' }),
+      ' 온디바이스 모델로 새로운 사유를 직조하는 중...'
+    );
+    chips.replaceChildren();
+
+    let response;
+    try {
+      response = await sendMessage({ type: 'RUN_DRIFT', data: { query, directionId, fresh } });
+    } catch (err) {
+      response = { success: false, error: err.message };
+    }
+
+    // 그 사이 검색어가 바뀌었거나 다른 요청이 시작되었으면 이 응답은 버림
+    if (token !== requestToken || !bar.isConnected) return;
+
+    if (!response?.success || !response.data) {
+      indicator.replaceChildren(
+        el('span', { className: 'serendipity-error', text: `⚠️ 비틀기 중 오류 발생: ${response?.error || '응답 없음'}` })
+      );
+      return;
+    }
+
+    renderDrift(bar, response.data);
+  }
+
+  function renderDrift(bar, drift) {
+    const { indicator, chips } = bar._refs;
+    const dir = drift.direction;
+    const isFallback = drift.source !== 'gemini-nano';
+
+    indicator.replaceChildren(
+      el('span', { className: 'serendipity-vector-icon', text: dir.icon || '🧭' }),
+      el('strong', { className: 'serendipity-vector-name', text: dir.title }),
+      el('span', { className: 'serendipity-vector-prompt', text: `"${dir.prompt}"` }),
+      isFallback
+        ? el('span', {
+            className: 'serendipity-fallback-badge',
+            title: 'Gemini Nano를 사용할 수 없어 미리 정해진 연상 키워드로 대신했습니다. 확장 프로그램 팝업에서 모델을 활성화하세요.',
+            text: '내장 연상 모드'
+          })
+        : null
+    );
+
+    chips.replaceChildren(...(drift.queries || []).map((item) => {
+      const rank = item.rank || 1;
+      return el('a', {
+        className: `serendipity-stage-chip chip-step-${rank}`,
+        href: googleSearchUrl(item.query),
+        title: `${item.stage}\n${item.explanation}\n(클릭하여 이 검색어로 구글 검색)`
+      }, [
+        el('div', { className: 'serendipity-chip-meta' }, [
+          el('span', { className: 'serendipity-stage-rank', text: `${rank}단계 · ${item.distance} 이탈` })
+        ]),
+        el('div', { className: 'serendipity-chip-query', text: item.query }),
+        el('div', { className: 'serendipity-chip-exp', text: item.explanation }),
+        el('span', { className: 'serendipity-chip-link', text: '크롬 검색창으로 바로 가기 ↗' })
+      ]);
+    }));
+  }
+
+  /* -------------------------------------------------------------- */
+  /* 초기화 & SPA 네비게이션 감지                                       */
+  /* -------------------------------------------------------------- */
+
   function init() {
     injectHomeSearchButton();
 
-    const q = extractSearchQuery();
-    if (q) {
-      injectDriftBar(q);
+    if (!isWebSearchPage()) {
+      removeDriftBar();
+      return;
     }
+    const q = extractSearchQuery();
+    if (q) injectDriftBar(q);
   }
 
-  // 페이지 로드 시 실행
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', init, { once: true });
   } else {
     init();
   }
 
-  // 구글 검색의 동적 페이지 전환(SPA 네비게이션) 감지
+  // 구글의 동적 페이지 전환 감지.
+  // 문서 전체 MutationObserver 대신 Navigation API(pushState 포함)를 사용하고,
+  // 미지원 브라우저에서만 가벼운 URL 폴링으로 대체합니다.
   let lastUrl = location.href;
-  new MutationObserver(() => {
-    const url = location.href;
-    if (url !== lastUrl) {
-      lastUrl = url;
-      setTimeout(init, 300);
-    }
-  }).observe(document, { subtree: true, childList: true });
+  const onMaybeNavigated = () => {
+    if (location.href === lastUrl) return;
+    lastUrl = location.href;
+    setTimeout(init, 300); // 새 결과 DOM 이 그려질 시간을 줌
+  };
 
+  if (window.navigation?.addEventListener) {
+    window.navigation.addEventListener('navigatesuccess', onMaybeNavigated);
+  } else {
+    setInterval(onMaybeNavigated, 1000);
+  }
+  window.addEventListener('popstate', onMaybeNavigated);
 })();
-

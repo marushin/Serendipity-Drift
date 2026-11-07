@@ -454,3 +454,39 @@
 .serendipity-dark .serendipity-chip-exp {
   color: #9aa0a6;
 }
+
+/* ---- v1.1: 칩 링크화 / 폴백 배지 / 수동 실행 버튼 ---- */
+a.serendipity-stage-chip,
+a.serendipity-stage-chip:hover,
+a.serendipity-stage-chip:visited {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.serendipity-stage-chip:focus-visible {
+  outline: 2px solid #0b57d0;
+  outline-offset: 2px;
+}
+
+.serendipity-fallback-badge {
+  margin-left: auto;
+  background: #fef7e0;
+  color: #8a5300;
+  border: 1px solid #f9dc8c;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 100px;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.serendipity-dark .serendipity-fallback-badge {
+  background: #3b2f12;
+  color: #fdd663;
+  border-color: #6b5420;
+}
+
+.serendipity-run-btn {
+  margin-left: auto;
+}

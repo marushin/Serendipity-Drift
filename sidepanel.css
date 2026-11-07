@@ -918,3 +918,23 @@ body {
   color: var(--chrome-blue);
   text-decoration: underline;
 }
+
+/* ---- v1.1: 내장 연상(폴백) 안내 ---- */
+.fallback-note {
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #8a5300;
+  background: #fef7e0;
+  border: 1px solid #f9dc8c;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .fallback-note {
+    color: #fdd663;
+    background: #3b2f12;
+    border-color: #6b5420;
+  }
+}

@@ -220,3 +220,31 @@ body {
 .popup-footer a:hover {
   text-decoration: underline;
 }
+
+/* ---- v1.1: 자동 실행 토글 ---- */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.setting-row strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 12.5px;
+}
+
+.setting-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--chrome-blue);
+  flex-shrink: 0;
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="512" height="512" fill="none">
+  <defs>
+    <clipPath id="sdLogoEye">
+      <circle cx="24" cy="24.5" r="16"/>
+    </clipPath>
+  </defs>
+  <circle cx="24" cy="24" r="22" fill="#9fdcc8"/>
+  <circle cx="24" cy="24.5" r="16" fill="#ffffff"/>
+  <g clip-path="url(#sdLogoEye)">
+    <circle cx="29.5" cy="26.5" r="9.5" fill="#3a9d8a"/>
+    <circle cx="32.2" cy="27.6" r="5.2" fill="#1f2a37"/>
+    <circle cx="27.6" cy="22.8" r="2" fill="#ffffff"/>
+    <path d="M4 4H44V19.5L4 14.5Z" fill="#74c5ae"/>
+    <path d="M4 14.5L44 19.5" stroke="#3a9d8a" stroke-width="1.4"/>
+  </g>
+</svg>

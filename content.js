@@ -167,12 +167,30 @@
   // 정적 마크업(외부 데이터 없음)
   const CHROME_ICON_SVG = `
     <svg class="serendipity-chrome-icon" viewBox="0 0 48 48" width="22" height="22" fill="none" aria-hidden="true">
-      <path d="M24 4.5C15.8 4.5 8.7 9.4 5.5 16.5L16.2 35.1C18.4 36.6 21.1 37.5 24 37.5C31.5 37.5 37.5 31.5 37.5 24C37.5 23.3 37.4 22.7 37.3 22H24V4.5Z" fill="#ea4335"/>
-      <path d="M43.5 24C43.5 18.5 41.3 13.5 37.8 9.9L24 33.8H12.3L22.9 43.1C23.3 43.1 23.6 43.2 24 43.2C34.8 43.2 43.5 34.5 43.5 24Z" fill="#fbbc04"/>
-      <path d="M4.5 24C4.5 29.5 6.7 34.5 10.2 38.1L24 14.2H35.7L25.1 4.9C24.7 4.9 24.4 4.8 24 4.8C13.2 4.8 4.5 13.5 4.5 24Z" fill="#34a853"/>
-      <circle cx="24" cy="24" r="9.5" fill="#ffffff"/>
-      <circle cx="24" cy="24" r="7.5" fill="#1a73e8"/>
+      <defs>
+        <clipPath id="sdLogoEye">
+          <circle cx="24" cy="24.5" r="16"/>
+        </clipPath>
+      </defs>
+      <circle cx="24" cy="24" r="22" fill="#9fdcc8"/>
+      <circle cx="24" cy="24.5" r="16" fill="#ffffff"/>
+      <g clip-path="url(#sdLogoEye)">
+        <circle cx="29.5" cy="26.5" r="9.5" fill="#3a9d8a"/>
+        <circle cx="32.2" cy="27.6" r="5.2" fill="#1f2a37"/>
+        <circle cx="27.6" cy="22.8" r="2" fill="#ffffff"/>
+        <path d="M4 4H44V19.5L4 14.5Z" fill="#74c5ae"/>
+        <path d="M4 14.5L44 19.5" stroke="#3a9d8a" stroke-width="1.4"/>
+      </g>
     </svg>`;
+
+  /** 단계별 눈알 아이콘 (stage-eye.js 전역, 상수로만 만들어지는 정적 SVG) */
+  function stageEye(rank) {
+    const markup = globalThis.serendipityStageEye?.(rank);
+    if (!markup) return null;
+    const tpl = document.createElement('template');
+    tpl.innerHTML = markup;
+    return tpl.content.firstElementChild;
+  }
 
   function removeDriftBar() {
     document.getElementById(BAR_ID)?.remove();
@@ -321,6 +339,7 @@
         title: `${item.stage}\n${item.explanation}\n(클릭하여 이 검색어로 구글 검색)`
       }, [
         el('div', { className: 'serendipity-chip-meta' }, [
+          stageEye(rank),
           el('span', { className: 'serendipity-stage-rank', text: `${rank}단계 · ${item.distance} 이탈` })
         ]),
         el('div', { className: 'serendipity-chip-query', text: item.query }),
@@ -349,6 +368,7 @@
         title: `${item.stage}\n${item.explanation}\n(클릭하여 이 키워드로 ${kind === 'video' ? '동영상' : '이미지'} 검색)`
       }, [
         el('div', { className: 'serendipity-media-label' }, [
+          stageEye(rank),
           el('span', { className: 'serendipity-stage-rank', text: `${rank}단계` }),
           el('span', { className: 'serendipity-media-query', text: item.query })
         ]),

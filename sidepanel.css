@@ -523,20 +523,72 @@ button {
   gap: 12px;
 }
 
-.chrome-spinner {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 3.5px solid transparent;
-  border-top-color: #1a73e8;
-  border-right-color: #ea4335;
-  border-bottom-color: #fbbc04;
-  border-left-color: #34a853;
-  animation: chrome-spin 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+/* 로고 눈알: 눈동자가 눈 안을 빙글빙글 굴러다닙니다 (좌표는 viewBox 48 기준) */
+.eye-spinner {
+  width: 52px;
+  height: 52px;
 }
 
-@keyframes chrome-spin {
+.eye-spinner .eye-orbit {
+  transform-origin: 24px 24.5px; /* 눈알 중심 */
+  animation: eye-roll 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* 반사광은 눈동자와 함께 움직이되, 항상 왼쪽 위에 머물도록 역회전 */
+.eye-spinner .eye-glint {
+  transform-origin: 29.5px 26.5px; /* 홍채 중심 */
+  animation: eye-roll-back 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes eye-roll {
   to { transform: rotate(360deg); }
+}
+
+@keyframes eye-roll-back {
+  to { transform: rotate(-360deg); }
+}
+
+/* 한 바퀴(1.4s) 돌 때마다 다음 색으로: 민트 → 하늘 → 라벤더 → 핑크 → 피치 → 버터 (6색 × 1.4s = 8.4s)
+   각 색을 대부분 유지하다가 바퀴 끝에서 짧게 섞이며 넘어갑니다. fill/stroke 는 currentColor 를 따릅니다. */
+.eye-spinner .eye-hue-ring { color: #9fdcc8; animation: eye-hue-ring 8.4s linear infinite; }
+.eye-spinner .eye-hue-lid  { color: #74c5ae; animation: eye-hue-lid 8.4s linear infinite; }
+.eye-spinner .eye-hue-iris { color: #3a9d8a; animation: eye-hue-iris 8.4s linear infinite; }
+
+@keyframes eye-hue-ring {
+  0%, 12.5%       { color: #9fdcc8; }
+  16.67%, 29.17%  { color: #add6ff; }
+  33.33%, 45.83%  { color: #cfc2ff; }
+  50%, 62.5%      { color: #ffc2d6; }
+  66.67%, 79.17%  { color: #ffc4ad; }
+  83.33%, 95.83%  { color: #ffdf8a; }
+  100%            { color: #9fdcc8; }
+}
+
+@keyframes eye-hue-lid {
+  0%, 12.5%       { color: #74c5ae; }
+  16.67%, 29.17%  { color: #82bcf5; }
+  33.33%, 45.83%  { color: #ae9cf2; }
+  50%, 62.5%      { color: #f79bb8; }
+  66.67%, 79.17%  { color: #f7a286; }
+  83.33%, 95.83%  { color: #f5c452; }
+  100%            { color: #74c5ae; }
+}
+
+@keyframes eye-hue-iris {
+  0%, 12.5%       { color: #3a9d8a; }
+  16.67%, 29.17%  { color: #3f82d6; }
+  33.33%, 45.83%  { color: #7256d6; }
+  50%, 62.5%      { color: #d95585; }
+  66.67%, 79.17%  { color: #d9694a; }
+  83.33%, 95.83%  { color: #c98a1b; }
+  100%            { color: #3a9d8a; }
+}
+
+/* 단계 카드의 눈알 (stage-eye.js) */
+.serendipity-stage-eye {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
 }
 
 .loading-text {
@@ -1054,7 +1106,14 @@ button {
   .thumb-skeleton {
     animation: none;
   }
-  .chrome-spinner {
-    animation-duration: 2s;
+  .eye-spinner .eye-orbit,
+  .eye-spinner .eye-glint {
+    animation-duration: 3.5s;
+  }
+  /* 색 순환도 느려진 회전(3.5s × 6)에 맞춤 */
+  .eye-spinner .eye-hue-ring,
+  .eye-spinner .eye-hue-lid,
+  .eye-spinner .eye-hue-iris {
+    animation-duration: 21s;
   }
 }

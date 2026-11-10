@@ -294,15 +294,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mediaLabel = mode === 'video' ? '동영상' : '이미지';
     const card = document.createElement('article');
     card.className = `drift-card step-${rank}${isMedia ? ` is-media-mode is-${mode}-mode` : ''}`;
+    // 단계별 눈알 (stage-eye.js 전역, 정적 SVG) — 단계가 오를수록 더 옆을 흘겨봄
+    const stageEye = globalThis.serendipityStageEye?.(rank) ?? '';
 
     const header = isMedia
       ? `<div class="card-step-badge-row">
+          ${stageEye}
           <span class="card-step-badge">${rank}단계</span>
           <h2 class="card-keyword" title="${escapeHtml(item.explanation)}">${escapeHtml(item.query)}</h2>
         </div>
         <div class="thumb-grid" aria-label="'${escapeHtml(item.query)}' ${mediaLabel} 검색 결과" aria-busy="true"></div>`
       : `<div class="card-step-badge-row">
-          <span class="card-step-badge">${rank}단계 · ${escapeHtml(item.distance || `${rank * 25}%`)}</span>
+          ${stageEye}
+          <span class="card-step-badge">${rank}단계 ·${escapeHtml(item.distance || `${rank * 25}%`)}</span>
           ${item.scope ? `<span class="card-scope-badge">${escapeHtml(item.scope)}</span>` : ''}
         </div>
         <h2 class="card-headline">${escapeHtml(item.query)}</h2>

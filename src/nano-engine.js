@@ -316,7 +316,66 @@ export class NanoDriftEngine {
 /* 프롬프트 & 파서 (순수 함수 — 단위 테스트 대상)                         */
 /* ------------------------------------------------------------------ */
 
+const SENTENCE_HINT_RE =
+  /[?？]\s*$|(?:[은는을를]|에서|에게|으로|하는|하기|하면|방법|법|까|나요|세요|니다)(?=\s|$)|\b(?:how|what|why|when|where|who|which|is|are|do|does|can|to|the|for|with)\b/i;
+
+/**
+ * 문장형 검색어 판별. 어절이 4개 이상이면 문장으로 보고,
+ * 3개일 때는 조사·어미·의문사 같은 문장 신호가 있을 때만 문장으로 봅니다.
+ * ("아이폰 15 프로" 같은 명사 나열은 단어 모드로 남깁니다.)
+ */
+export function isSentenceQuery(query) {
+  const clean = (query || '').trim();
+  if (!clean) return false;
+  const words = clean.split(/\s+/);
+  if (words.length >= 4) return true;
+  return words.length === 3 && SENTENCE_HINT_RE.test(clean);
+}
+
+const SENTENCE_SYSTEM_PROMPT =
+  '당신은 문장형 검색어의 뼈대(어순·조사·어미)를 살린 채 핵심 요소를 조금씩 바꿔 가며, 1단계(가까운 변주)부터 4단계(완전히 낯선 영토)까지 점진적으로 멀어지게 하는 검색어 추천 AI입니다.';
+
+/**
+ * 문장형 검색어용 프롬프트.
+ * 1·2단계는 문장 틀을 유지한 채 요소만 교체하고, 3단계에서 틀을 느슨하게 풀어 4단계에서 키워드로 도약합니다.
+ */
+function buildSentenceDriftPrompts(originalQuery, direction) {
+  const isCategoryMode = direction.id === 'category';
+  const tag = (scope) => (isCategoryMode ? `[${scope}] ` : '');
+
+  const directionLine = isCategoryMode
+    ? `지침: 문장 속 핵심 요소를 관련 카테고리 안에서 바꾸되, 단계가 오를수록 더 먼 카테고리로 옮기세요.`
+    : `사유의 도약 방향: ${direction.title} - "${direction.prompt}"
+(바꿔 넣을 요소와 도약할 곳은 이 방향을 따라 고르세요.)`;
+
+  const userPrompt = `원본 문장: "${originalQuery}"
+${directionLine}
+
+[필수 규칙 - 문장의 뼈대를 남기며 1~4단계로 멀어지기]
+원본은 단어가 아니라 문장입니다. 처음부터 단어 하나로 줄이지 말고, 단계가 오를수록 문장의 틀을 조금씩 놓아 주세요:
+- [1] 1단계 (25% 이탈): 어순·조사·어미는 그대로 두고, 핵심 요소 한 가지만 가까운 것으로 교체한 문장
+- [2] 2단계 (50% 이탈): 문장 틀은 유지하되, 핵심 요소 두 가지를 바꿔 이웃한 상황으로 옮긴 문장
+- [3] 3단계 (75% 이탈): 문장의 의도(무엇을 알고 싶은가)만 남기고, 대상과 상황을 다른 분야로 옮긴 짧은 구절
+- [4] 4단계 (100% 이탈): 문장 틀을 버리고, 얇은 실마리 하나로만 이어진 낯선 검색 키워드
+
+* 주의: 원본 문장을 그대로 출력하지 마세요. 1·2단계는 반드시 원본과 같은 문장 형태여야 합니다.
+* 검색어 안에는 "|" 기호를 쓰지 마세요.
+* 마크다운 볼드체(**)나 제목 없이 정확히 아래 4줄 형식으로만 출력하세요.
+
+[형식 참고 예시 - 원본 문장이 "비 오는 날 강아지 산책시키는 법"일 때]
+[1] 눈 오는 날 강아지 산책시키는 법 | ${tag('동일 소분류')}날씨 조건 하나만 비에서 눈으로 바꿨습니다.
+[2] 비 오는 날 고양이와 실내에서 노는 법 | ${tag('인접 중분류')}동물과 활동을 이웃한 상황으로 옮겼습니다.
+[3] 장마철 군견 훈련 방식 | ${tag('교차 대분류')}궂은 날씨에 동물을 다룬다는 의도만 남겼습니다.
+[4] 양치기 개 휘슬 신호 | ${tag('사유의 끝점')}사람과 개가 들판에서 호흡을 맞추는 오래된 기술로 도약했습니다.
+
+이제 원본 문장 "${originalQuery}"에 대해 [1]~[4] 4줄만 출력하세요:`;
+
+  return { systemPrompt: SENTENCE_SYSTEM_PROMPT, userPrompt };
+}
+
 export function buildDriftPrompts(originalQuery, direction) {
+  if (isSentenceQuery(originalQuery)) return buildSentenceDriftPrompts(originalQuery, direction);
+
   const isCategoryMode = direction.id === 'category';
   const systemPrompt = isCategoryMode
     ? '당신은 검색어의 카테고리를 1단계(소분류 내 대체재)부터 4단계(먼 연상 카테고리)까지 점진적으로 확장하며 주제어를 바꾸어 주는 검색어 추천 AI입니다.'

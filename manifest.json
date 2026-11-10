@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Serendipity Drift: 비틀린 사유의 궤적",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "minimum_chrome_version": "138",
   "description": "Chrome 내장 Gemini Nano 모델을 활용해 검색창의 의도를 살짝 비틀고 낯선 사유의 결과를 발견하는 온디바이스 검색 확장 프로그램",
   "icons": {
@@ -40,7 +40,7 @@
         "https://www.google.co.kr/webhp*",
         "https://www.google.co.kr/search*"
       ],
-      "js": ["content.js"],
+      "js": ["stage-eye.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_end"
     }

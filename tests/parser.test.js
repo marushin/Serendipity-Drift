@@ -5,6 +5,8 @@ import {
   parsePhraseResponse,
   splitPhrasesHeuristically,
   cleanQueryStr,
+  isSentenceQuery,
+  buildDriftPrompts,
   NanoDriftEngine
 } from '../src/nano-engine.js';
 
@@ -87,6 +89,56 @@ test('구절 응답 파싱: 번호·불릿 제거, 하이픈 단어 보존', () 
 test('규칙 기반 구절 분해', () => {
   assert.deepEqual(splitPhrasesHeuristically('가, 나다'), ['가', '나다']);
   assert.equal(splitPhrasesHeuristically('a b c d e f g h').length, 4);
+});
+
+test('문장형 검색어 판별', () => {
+  assert.equal(isSentenceQuery('비 오는 날 강아지 산책시키는 법'), true);
+  assert.equal(isSentenceQuery('고구마 맛있게 굽는 법'), true);
+  assert.equal(isSentenceQuery('how to bake bread'), true);
+  assert.equal(isSentenceQuery('하늘은 왜 파란가?'), true);
+  assert.equal(isSentenceQuery('고구마'), false);
+  assert.equal(isSentenceQuery('구글 픽셀'), false);
+  assert.equal(isSentenceQuery('아이폰 15 프로'), false);
+  assert.equal(isSentenceQuery(''), false);
+  assert.equal(isSentenceQuery(undefined), false);
+});
+
+test('문장형 검색어는 문장 뼈대를 유지하는 프롬프트를 사용', () => {
+  const category = { id: 'category', title: 't', prompt: 'p' };
+  const vector = { id: 'night', title: '밤과 꿈', prompt: '어둠으로 건너가세요.' };
+  const sentence = '비 오는 날 우산 없이 걷는 법';
+
+  const word = buildDriftPrompts('고구마', category);
+  const sCat = buildDriftPrompts(sentence, category);
+  const sVec = buildDriftPrompts(sentence, vector);
+
+  assert.ok(!word.userPrompt.includes('원본 문장'));
+  assert.ok(sCat.userPrompt.includes(`원본 문장: "${sentence}"`));
+  assert.ok(sCat.userPrompt.includes('[동일 소분류]'), '기본 모드는 범위 태그 예시 포함');
+  assert.ok(sVec.userPrompt.includes('밤과 꿈'));
+  assert.ok(!sVec.userPrompt.includes('[동일 소분류]'), '사유 벡터 모드는 범위 태그 없음');
+  assert.equal(sCat.systemPrompt, sVec.systemPrompt);
+  assert.notEqual(sCat.systemPrompt, word.systemPrompt);
+});
+
+test('문장형 응답 파싱: 문장 검색어와 물음표 보존', () => {
+  const text = `[1] 눈 오는 날 강아지 산책시키는 법 | [동일 소분류] 날씨만 바꿨습니다.
+[2] 비 오는 날 고양이와 실내에서 노는 법 | [인접 중분류] 이웃한 상황입니다.
+[3] 장마철 군견은 어떻게 훈련할까? | [교차 대분류] 의도만 남겼습니다.
+[4] 양치기 개 휘슬 신호 | [사유의 끝점] 도약했습니다.`;
+  const r = parseModelResponse(text, '비 오는 날 강아지 산책시키는 법');
+  assert.deepEqual(queries(r), [
+    '눈 오는 날 강아지 산책시키는 법',
+    '비 오는 날 고양이와 실내에서 노는 법',
+    '장마철 군견은 어떻게 훈련할까?',
+    '양치기 개 휘슬 신호'
+  ]);
+  assert.equal(r[1].scope, '인접 중분류');
+
+  // 모델이 원본 문장을 그대로 되돌려주면 그 줄은 버립니다.
+  const echoed = parseModelResponse(text, '눈 오는 날 강아지 산책시키는 법');
+  assert.equal(echoed.length, 3);
+  assert.equal(echoed[0].query, '비 오는 날 고양이와 실내에서 노는 법');
 });
 
 test('Prompt API 미지원 환경에서는 폴백 결과를 반환', async () => {

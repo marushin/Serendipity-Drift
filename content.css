@@ -272,8 +272,15 @@ a.serendipity-stage-chip:visited {
 .serendipity-chip-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   margin-bottom: 6px;
+}
+
+/* 단계별 눈알 (stage-eye.js) */
+.serendipity-stage-eye {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .serendipity-stage-rank {
@@ -354,7 +361,7 @@ a.serendipity-media-step:visited {
 
 .serendipity-media-label {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   min-width: 0;
   padding: 0 2px;
